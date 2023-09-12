@@ -2,7 +2,10 @@
 
 from yupi
 
-#### 项目技术：
+新增需求：一键变灰？  
+哈哈哈哈哈哈，地狱需求/doge
+
+### 项目技术：
 
 前端: Vue3、Arco Design 组件库、手撸项目模板、在线代码编辑器、在线文档浏览  
 Java 进程控制、Java安全管理器、部分JVM知识点  
@@ -16,6 +19,19 @@ Spring Cloud 微服务、消息队列、多种设计模式
 1. 任务调度：不是直接拒绝，应该是告诉用户要等多久轮到自己执行
 2. 要学会制作时序图、分层架构图
 3. 代码沙箱：让程序跑在一个隔离的环境下，不对外界的其他程序造成影响（保证每个用户的程序运行在独立的环境中）——coding的过程中可以先把它当成黑盒...
+
+框架的结构(src部分)：
+
+1. **assets 文件夹**：这通常用于**存放项目中的静态资源**，如图像、字体、样式表、音频文件等。这些资源可以在前端应用程序中使用，并通过相对路径引用
+2. **components 文件夹**：这是用于**存放可重用组件**的地方。组件是前端应用程序的构建块，它们可以包括界面元素、小部件和功能模块。将组件放在这个文件夹中有助于保持代码的组织结构和可维护性。
+3. **layouts 文件夹**：这个文件夹通常用于**存放应用程序的不同布局或页面模板**。在一些前端框架中，你可以创建多个不同的布局，然后根据需要将它们应用于不同的页面。
+4. **router 文件夹**：在使用前端路由器的应用程序中，这个文件夹通常**包含路由配置和路由器相关的代码**
+   。前端路由器用于管理应用程序的导航和URL路由。
+5. **store 文件夹**：如果你使用状态管理库（如Vuex、Redux等），这个文件夹通常用于**存放应用程序的状态管理代码**
+   。状态管理库有助于管理应用程序的全局状态和数据。
+6. **views 文件夹**：这个文件夹通常**包含应用程序的不同视图或页面**。**每个视图对应着一个特定的路由或页面**
+   ，它们通常包含与用户界面相关的代码和逻辑。
+7. **access 文件夹**：全局权限校验
 
 #### 前端初始化：
 
@@ -38,7 +54,7 @@ app.mount('#app');
 //完整引入（写进main.ts）
    ```
 
-#### 项目通用布局：(于layouts文件夹中)
+### 项目通用布局：(于layouts文件夹中)
 
 详见layouts/BasicLayout.vue，下面是学到的东西
 
@@ -90,7 +106,8 @@ modules (模块): 把 个大的 state (全局变量) 划分为多个小模块，
 1. 在路由配置文件，定义某个路由的访问权限
 2. 在全局页面组件 app.vue 中，绑定一个全局路由监听。每次访问页面时，根据用户要访问页面的路由信息先判断用户是否有对应的访问权限
 3. 如果有，跳转到原页面，如果没有，拦截或跳转到 401 鉴权或登录页  
-下面是一个利用beforeEach获取路由信息,进而判断的方法
+   下面是一个利用beforeEach获取路由信息,进而判断的方法
+
 ```js
 router.beforeEach((to, from, next) => {
     if (to.meta?.access === "canAdmin") {
@@ -102,3 +119,98 @@ router.beforeEach((to, from, next) => {
     next();
 });
 ```
+
+## Day2 2023.9.12
+
+### question:
+
+1. min-height是什么？vh是什么意思？| position是什么元素？
+2. :wrap是换行？怎么记忆
+3. style="margin-bottom: 16px" 这是什么意思呢？
+4. v-for 和 v-if的渲染优先级问题，**v-for 比 v-if 有更高的优先级**  
+   意味着在同一元素上使用 v-for 和 v-if 时，v-for 的循环渲染会在 v-if 条件判断之前执行。  
+   **所以尽量不要两者一起使用（推荐在js中先过滤）**
+5. const loginUser = store.state.user.loginUser; 这是什么意思呢？
+6.
+
+### 项目通用布局（接上）
+
+#### 全局权限管理（new），不再依赖于app.vue，根据权限控制菜单的显隐
+
+新建一个access目录用于定义权限
+
+1. 定义权限，见accessEnum.ts（可知类似枚举类，进而确定权限定义的规范）
+   ```js
+      const AccessEnum = {
+         NOT_LOGIN: "notLogin",
+         USER: "user",
+         ADMIN: "admin",
+       };
+   ```
+2. 定义一个公用的权限校验函数，见checkAccess.ts
+   ```js
+   const checkAccess = (loginUser: any, needAccess = AccessEnum.NOT_LOGIN) => {
+   //获取当前登录用户具有的权限，如果没有loginUser，默认未登录
+    const loginUserAccess = loginUser?.userRole ?? AccessEnum.NOT_LOGIN;
+    if (needAccess === AccessEnum.NOT_LOGIN) {
+        return true;
+    }
+   //如果需要用户登录才能访问
+    if (needAccess === AccessEnum.USER) {
+   // 只要登录就可以了
+        if (loginUserAccess === AccessEnum.NOT_LOGIN) 
+            return false;
+    }
+    if (needAccess === AccessEnum.ADMIN) {
+        if (loginUserAccess !== AccessEnum.ADMIN)
+            return false;
+    }
+    return true;
+   //影响不大，属于少写代码了
+   };
+   ```
+3. 修改GlobalHeader，特别是使用了计算属性，可以保证在更新的时候，会同步更新对页面的渲染
+   ```ts
+      const visibleRoutes = computed(() => {
+        return routes.filter((item, idex) => {
+            if (item.meta?.hideInMenu) {
+                return false;
+            }
+            if (
+                !checkAccess(store.state.user.loginUser, item?.meta?.access as string)
+            ) {
+                return false;
+            }
+            return true;
+        });
+      });
+   ```
+4. **特殊提醒：一个js文件想要被其他模块使用，需要导出**，如下
+   ```js
+   export default checkAccess;
+   export default AccessEnum;
+   ```
+
+### 全局项目入口（但是没有实现）
+
+app.vue中，见doInit & onMounted
+
+## 前端初始化到此为止！
+
+# 后端
+
+后端主要用的是 《后端模板》，详见本人 springboot-init项目
+
+### 使用方法：
+
+1. 改项目名称  
+   ctrl + shift + F 进行全局搜索，找到springboot-init  
+   ctrl + shift + R 进行全局替换，换为自己的项目名称（本项目后端为yhyoj_backend）
+2. 改包名  
+   ctrl + shift + F 进行全局搜索，找到包名（springbootinit）  
+   ctrl + shift + R 进行全局替换，换为自己的包名（本项目后端为yhyoj）
+3. 找到未替换的包名（一般为目录名）  
+   shift + F6 ， 将包名替换为上一步的包名
+4. 找到 yhyoj_backend(项目名称)/src/main/resources/application.yml 修改配置文件  
+   数据库部分，按照自己的本地数据库进行更改  
+   端口号，尽量不要和自己的其他项目的重复

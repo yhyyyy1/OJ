@@ -1,6 +1,6 @@
 # OJ
 
-尽量每天更新 & 每次学习需要先解决前一天留下来的问题
+尽量每天更新 & 一端时间的学习后解决前一段时间留下来的问题——沉淀/doge  
 新增需求：一键变灰？  
 哈哈哈哈哈哈，地狱需求/doge
 
@@ -135,7 +135,6 @@ router.beforeEach((to, from, next) => {
    意味着在同一元素上使用 v-for 和 v-if 时，v-for 的循环渲染会在 v-if 条件判断之前执行。  
    **所以尽量不要两者一起使用（推荐在js中先过滤）**
 5. const loginUser = store.state.user.loginUser; 这是什么意思呢？
-6.
 
 ### 项目通用布局（接上）
 
@@ -234,11 +233,10 @@ app.vue中，见doInit & onMounted
     });
     ```
    这里的...是什么意思？
-3.  await store.dispatch("user/getLoginUser");  
-    await 是干嘛的
-4.  next(`/user/login?redirect=${to.fullPath}`);
+3. await store.dispatch("user/getLoginUser");  
+   await 是干嘛的
+4. next(`/user/login?redirect=${to.fullPath}`);
    这里跳转后重定向，是什么意思 & 语法
-5. 
 
 ### 后端模板讲解：
 
@@ -356,8 +354,8 @@ openapi --input http://localhost:8121/api/v2/api-docs --output ./generated --cli
     * 在哪里触发 getLoginUser 的执行？应当在一个全局的位置  
       路由拦截(✔，之前在app.vue中有写过，现在移到access/index.ts中) 、全局页面入口app.vue、全局通用布局、
 
-
 #### 全局权限管理优化
+
 1. 新建 access\index.ts 文件，把原有的路由拦截、权限校验逻辑放在独立的文件中  
    优势：只要不引入、就不会开启、不会对项目有影响
 2. 编写权限管理和自动登录逻辑  
@@ -376,7 +374,7 @@ openapi --input http://localhost:8121/api/v2/api-docs --output ./generated --cli
       const loginUser = store.state.user.loginUser;
       //如果之前没登陆过，自动登录
       if (!loginUser || !loginUser.userRole) {
-         // 加 await 是为了等用户登录成功之后，再执行后续的代码
+         // 加 await 是为了等用户登录成功之后，再执行后续的代码，异步变同步
          await store.dispatch("user/getLoginUser");
       }
       //上面是希望用户尽量登录，
@@ -399,17 +397,28 @@ openapi --input http://localhost:8121/api/v2/api-docs --output ./generated --cli
    });
    
    ```
+
 #### User页面开发：
+
 包括登录和注册
 因为登录页面不需要通用模板的导航栏，所以就自己再开发一套喽，实现多套布局
+
 ##### 实现多套布局：
+
 在route.ts中，添加user的对应路由
+
    ```ts
    {
     path: "/user",
-    name: "用户",
-    component: UserLayout,
-    children: [
+        name
+:
+    "用户",
+        component
+:
+    UserLayout,
+        children
+:
+    [
         {
             path: "/user/login",
             name: "用户登录",
@@ -421,9 +430,71 @@ openapi --input http://localhost:8121/api/v2/api-docs --output ./generated --cli
             component: UserRegisterView,
         },
     ],
-    meta: {
+        meta
+:
+    {
         hideInMenu: true,
-    },
-   },
+    }
+,
+}
+,
    ```
+
 在app.vue中将UserLayout 和BasicLayout 做出区分
+
+## Day4 2023.9.14
+
+沉淀，解决之前的问题
+
+##### copy from Day2
+
+1. min-height是什么？vh是什么意思？| position是什么元素？
+   > min-height是一种CSS属性，用于指定元素的最小高度，   
+   > vh是CSS 中的一个单位，代表视口高度（Viewport Height）；一般有 min-height = 100vh
+   表示元素的高度就是浏览器窗口的可见高度  
+   > position 是CSS属性。它用于定义HTML元素在页面上的定位方式；position: sticky表示将当前元素黏附到特定位置上
+2. :wrap是换行？怎么记忆
+   > 记住吧，参数：true——启用文本或内容的自动换行；false——禁用文本或内容的自动换行
+3. style="margin-bottom: 16px" 这是什么意思呢？
+   > 定义该元素的底部边距（margin）为16像素；其实不只是页面底部，包括当前元素与下一个元素之间的边距
+4. v-for 和 v-if的渲染优先级问题
+   > **v-for 比 v-if 有更高的优先级**  
+   意味着在同一元素上使用 v-for 和 v-if 时，v-for 的循环渲染会在 v-if 条件判断之前执行。  
+   **所以尽量不要两者一起使用（推荐在js中先过滤）**
+5. const loginUser = store.state.user.loginUser; 这是什么意思呢？
+   > 前面肯定有const store = useStore();
+   > 这个就像数据结构一样，一层一层的 state
+
+##### copy from Day3
+
+1. aop切面？ 有什么用呢
+   > 在后端
+   aop：用于全局权限校验、全局日志记录
+2. ```ts
+    commit("updateUser", {
+        ...state.loginUser,
+        userRole: AccessEnum.NOT_LOGIN,
+    });
+    ```
+   这里的...是什么意思？
+   > 经过查资料 ...是保证单向的数据传递，确保状态的不可变性和可预测性。。。。。
+3. await store.dispatch("user/getLoginUser");  
+   await 是干嘛的——异步变同步
+   > await 关键字用于等待一个异步操作的完成，使异步代码看起来像同步代码一样执行。  
+   > 表示等待 store.dispatch("user/getLoginUser") 这个异步操作完成后再继续执行下面的代码，从而实现了异步变同步的效果。
+4. next(`/user/login?redirect=${to.fullPath}`);
+   这里跳转后重定向，&是什么意思
+   > 就是之前mybatis中的参数空缺，使用to.fullPath填充
+
+##### create from codeFiles
+
+1. 关于 store.dispatch 的作用：
+   > dispatch：分发；之后跟一个方法如user/getLoginUser & 传递的参数  
+   > 实现调用store中actions部分中的函数  
+   > 实现了异步操作
+2. 一定要注意store中的状态变量，调用方法：  
+   store.state.user（某个store文件存储的状态）.某个状态  
+   使用store.dispatch 调用actions 中的函数  
+   使用store.commit 调用 mutations 中的函数
+3. 
+

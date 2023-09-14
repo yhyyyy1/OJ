@@ -43,6 +43,7 @@ const router = useRouter();
 const store = useStore();
 const selectedKeys = ref([route.path]);
 
+store.
 const visibleRoutes = computed(() => {
   return routes.filter((item, idex) => {
     if (item.meta?.hideInMenu) {

@@ -22,9 +22,19 @@
         </a-menu-item>
       </a-menu>
     </a-col>
-    <a-col flex="100px">
-      <div>
-        {{ store.state.user?.loginUser?.userName ?? "未登录" }}
+    <a-col flex="60px">
+      <div class="title-bar">
+        <a-dropdown>
+          <a-button
+            ><img class="userImage" src="../assets/UserImage.jpg"
+          /></a-button>
+          <template #content>
+            <a-doption>
+              {{ store.state.user?.loginUser?.userName ?? "未登录" }}
+            </a-doption>
+            <a-doption @click="logout">退出登录</a-doption>
+          </template>
+        </a-dropdown>
       </div>
     </a-col>
   </a-row>
@@ -37,13 +47,13 @@ import { computed, ref } from "vue";
 import { useStore } from "vuex";
 import checkAccess from "@/access/checkAccess";
 import AccessEnum from "@/access/accessEnum";
+import { UserControllerService } from "../../generated";
 
 const route = useRoute();
 const router = useRouter();
 const store = useStore();
 const selectedKeys = ref([route.path]);
 
-store.
 const visibleRoutes = computed(() => {
   return routes.filter((item, idex) => {
     if (item.meta?.hideInMenu) {
@@ -58,17 +68,19 @@ const visibleRoutes = computed(() => {
   });
 });
 
-setTimeout(() => {
-  store.dispatch("user/getLoginUser", {
-    userName: "Yhy管理员",
-    userRole: AccessEnum.ADMIN,
-  });
-}, 3000);
+// setTimeout(() => {
+//   store.dispatch("user/getLoginUser", {
+//     userName: "Yhy管理员",
+//     userRole: AccessEnum.ADMIN,
+//   });
+// }, 3000);
 
 router.afterEach((to, from, failure) => {
   selectedKeys.value = [to.path];
 });
-
+const logout = () => {
+  UserControllerService.userLogoutUsingPost();
+};
 const doMenuClick = (key: string) => {
   router.push({
     path: key,
@@ -85,6 +97,10 @@ const doMenuClick = (key: string) => {
 
 .logo {
   height: 48px;
+}
+
+.userImage {
+  height: 36px;
 }
 
 .title {

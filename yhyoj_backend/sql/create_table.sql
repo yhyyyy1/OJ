@@ -27,12 +27,16 @@ create table if not exists user
 ) comment '用户' collate = utf8mb4_unicode_ci;
 
 -- 帖子表
-create table if not exists post
+create table if not exists question
 (
     id         bigint auto_increment comment 'id' primary key,
     title      varchar(512)                       null comment '标题',
     content    text                               null comment '内容',
     tags       varchar(1024)                      null comment '标签列表（json 数组）',
+    answer     text                               null comment '题目参考答案',
+    submitNum  int      default 0                 not null commit '题目提交数',
+    ACNum      int      default 0                 not null commit '题目通过数',
+    
     thumbNum   int      default 0                 not null comment '点赞数',
     favourNum  int      default 0                 not null comment '收藏数',
     userId     bigint                             not null comment '创建用户 id',
@@ -40,7 +44,7 @@ create table if not exists post
     updateTime datetime default CURRENT_TIMESTAMP not null on update CURRENT_TIMESTAMP comment '更新时间',
     isDelete   tinyint  default 0                 not null comment '是否删除',
     index idx_userId (userId)
-) comment '帖子' collate = utf8mb4_unicode_ci;
+) comment '题目' collate = utf8mb4_unicode_ci;
 
 -- 帖子点赞表（硬删除）
 create table if not exists post_thumb

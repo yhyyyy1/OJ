@@ -53,7 +53,7 @@
    ，它们通常包含与用户界面相关的代码和逻辑。
 7. **access 文件夹**：全局权限校验
 
-#### 前端初始化：
+### 前端初始化：
 
 1. 正常的node环境 & vue-cli脚手架
 2. vue create yhyoj_frontend——创建自己的前端项目
@@ -529,12 +529,149 @@ replace 表示用于导航时控制路由的替代方式（默认为false）
 当设置为true时，它将替代当前路由历史中的当前路由，而不会在历史中创建新的路由记录。  
 这意味着用户在浏览器的后退按钮或前进按钮上点击时，不会返回到前一个路由，而是直接跳转到新的路由。
 
+## Day6&7 2023.9.17 & 18
+
 ### 库表设计
+
 1. 用户模块(就用后端给的就行)
 2. 题目表
-   1. 题目标题
-   2. 题目内容（存放题目的介绍、输入输出提示、描述、具体的详情）
-   3. 题目标签（json 数组字符串）：栈/队列/链表，简单/中等/困难
-   4. 题目答案：管理员or用户设置的参考答案
-   5. 提交数、ac数
-   6. 判题相关：时间限制、内存限制、输入用例、输出用例 （使用judgeConfig——inputCase & outputCase 存对应的设置，便于维护）
+    1. 题目标题
+    2. 题目内容（存放题目的介绍、输入输出提示、描述、具体的详情）
+    3. 题目标签（json 数组字符串）：栈/队列/链表，简单/中等/困难
+    4. 题目答案：管理员or用户设置的参考答案
+    5. 提交数、ac数
+    6. 判题相关：judgeConfig——时间限制、内存限制，judgeCase——输入用例、输出用例 （judgeConfig属于json 对象，包括：
+       ```ts
+       {
+           "timeLimit": 1000,
+           "memoryLimit": 1000,
+           "stackLimit": 1000
+        }
+   JSON的优点：便于扩展，只需要改变对象内部的字段，而不用修改数据库表）
+   总体题目表为：
+   ```
+   -- 题目表
+   create table if not exists question
+   (
+   id         bigint auto_increment comment 'id' primary key,
+   title      varchar(512)                       null comment '标题',
+   content    text                               null comment '内容',
+   tags       varchar(1024)                      null comment '标签列表（json 数组）',
+   answer     text                               null comment '题目答案',
+   submitNum  int  default 0 not null comment '题目提交数',
+   acceptedNum  int  default 0 not null comment '题目通过数',
+   judgeCase text null comment '判题用例（json 数组）',
+   judgeConfig text null comment '判题配置（json 对象）',
+   thumbNum   int      default 0                 not null comment '点赞数',
+   favourNum  int      default 0                 not null comment '收藏数',
+   userId     bigint                             not null comment '创建用户 id',
+   createTime datetime default CURRENT_TIMESTAMP not null comment '创建时间',
+   updateTime datetime default CURRENT_TIMESTAMP not null on update CURRENT_TIMESTAMP comment '更新时间',
+   isDelete   tinyint  default 0                 not null comment '是否删除',
+   index idx_userId (userId)
+   ) comment '题目' collate = utf8mb4_unicode_ci;
+   ```
+3. 题目提交表
+    1. 提交用户id：userId
+    2. 题目 id：questionId
+    3. 语言：language
+    4. 用户的代码：code
+    5. 判题状态：status（0 - 待判题、1 - 判题中、2 - 成功、3 - 失败）
+    6. 判题信息（判题过程中得到的一些信息，比如程序的失败原因、程序执行消耗的时间、空间）：
+       其中判题信息有：
+        * Accepted 成功
+        * Wrong Answer 答案错误
+        * Compile Error 编译错误
+        * Memory Limit Exceeded 内存溢出
+        * Time Limit Exceeded 超时
+        * Presentation Error 展示错误
+        * Output Limit Exceeded 输出溢出
+        * Waiting 等待中
+        * Dangerous Operation 危险操作
+        * Runtime Error 运行错误（用户程序的问题）
+        * System Error 系统错误（做系统人的问题）  
+          judgeInfo（json 对象 包括的参数：
+       ```
+          {
+               "message": "程序执行信息",
+               "time": 1000, // 程序执行时间，单位为 ms
+               "memory": 1000, // 程序执行内存，单位为 kb
+          }
+   总体题目提交表为：
+    ```
+   -- 题目提交表
+   create table if not exists question_submit
+   (
+   id         bigint auto_increment comment 'id' primary key,
+   language   varchar(128)                       not null comment '编程语言',
+   code       text                               not null comment '用户代码',
+   judgeInfo  text                               null comment '判题信息（json 对象）',
+   status     int      default 0                 not null comment '判题状态（0 - 待判题、1 - 判题中、2 - 成功、3 - 失败）',
+   questionId bigint                             not null comment '题目 id',
+   userId     bigint                             not null comment '创建用户 id',
+   createTime datetime default CURRENT_TIMESTAMP not null comment '创建时间',
+   updateTime datetime default CURRENT_TIMESTAMP not null on update CURRENT_TIMESTAMP comment '更新时间',
+   isDelete   tinyint  default 0                 not null comment '是否删除',
+   index idx_questionId (questionId),
+   index idx_userId (userId)
+   ) comment '题目提交';
+    ```
+
+**索引**，什么情况加索引 & 选择什么字段加索引呢？  
+根据实际业务情况 & sql语句来添加（上面就是根据题目ID 添加）  
+要选择区分度很大的字段来加，如性别加索引就没必要了
+
+### 后端接口开发
+
+流程：
+
+1. 根据功能设计库表（详见上一步）
+2. **自动生成**对数据库基本的增删改查—— Mapper 和 Service 层的基本功能
+    1. 安装 MyBatisX 插件
+    2. 根据项目去调整生成配置（建议生成到独立的包 不要影响老的项目）
+       ![](D:\Project\OJ\yhyoj_frontend\doc\myBatisX.png)
+    3. 将生成的代码从生成包中移动到实际项目对应目录中
+3. 编写 Controller 层，实现基本的增删改查和权限校验
+    1. 在基础Controller中找业务相似的代码复制一下就可以（单表复制单表、关联表去复制关联表）
+    2. 复制实体类相关的DTO、VO、枚举值字段（用于接收相关请求 or 业务间传递），复制之后调整其中字段
+    3. dto中json为了方便，写成了list的形式，所以需要给json字段编写独立的类，如judgeCase、judgeConfig、judgeInfo
+4. 去根据业务定制开发新的功能/编写新的代码
+    1. 编写 QuestionVO 的json /对象转换工具类用同样的方法
+    2. 编写 questionSubmit 提交类，这次参考 postThumb 相关文件
+    3. 编写枚举类（判题状态 & 判题信息 & 编程语言）
+    4. 代码写好后不要着急写前端、先通过Swagger验证
+
+##### 经过测试发现的问题
+
+1. 使用Lombok（一种 Java 库）中的@Data注解，用于自动生成一些简单的函数  
+   如：get & set 、 equal 、 hashCode 、 toString
+2. 为了防止用户艳照id顺序爬取题目，建议id的生成规则改成 ASSIGN_ID（非连续自增的——雪花算法？） 而不是从 1 开始自增
+
+##### 纯原创接口——查询提交信息接口（重点是思路 & 过程）
+
+**功能**：能够根据用户id or 题目id or 编程语言 or 题目状态，去查询提交记录  
+**注意tips**：仅本人和管理员能看见自己（自交userId和登录ID相同）提交的代码  
+**实现方案**：先查询，再根据userId进行脱敏
+
+**业务前缀**，加与否？  
+加业务前缀的好处，防止多个表都有类似的类，产生冲突；不加的前提，因为可能这个类是多个业务之间共享的，能够复用的。
+
+**DTO**：（Data Transfer Object）数据传输对象， 即RPC 接口请求或传输出去的对象，用于展示层与服务层之间的数据传输对象。  
+**VO**：视图对象，一般位于Controller层，用于展示视图。  
+本项目定义的VO 类：作用是专门给前端返回对象，可以节约网络传输大小、或者**过滤字段（脱敏——主要的作用）**、保证安全性。  
+比如 judgeCase、answer 字段，一定要删，不能直接给用户答案。（过滤）
+
+数据脱敏——数据去隐私化
+
+synchronized——同步的，表明加锁了；对应数据库中对事务的操作
+
+枚举类中如 WAITING("等待中", 0) 其中“等待中”->text，0->value  
+这种的枚举方法可以通过getText & getValue获取这个枚举类附带的不同参数
+
+类名 + allget：获取当前类的所有变量，用于一个个查看参数 并 对其进行操作
+
+sqlfather——代码生成器，等学完设计模式，自己写一套
+
+
+
+

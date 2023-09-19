@@ -672,6 +672,178 @@ synchronized——同步的，表明加锁了；对应数据库中对事务的�
 
 sqlfather——代码生成器，等学完设计模式，自己写一套
 
+## Day8 2023.9.19
 
+纯前端，主要的OJ网页设计
 
+1. 用户注册页面
+    * 注册
+    * 登录
+2. 创建题目页面(管理员)
+3. 题目管理页面(管理员)
+    * 查看(搜索)
+    * 删除
+    * 修改
+    * 快捷创建
+4. 题目列表页 (用户)
+5. 题目详情页(在线做题页)
+    * 判题状态的查看
+6. 题目提交列表页
+7. 提交统计 & 个人页面（之后拓展）
 
+### 接入要用到的组件
+
+开工之前要进行技术选型！  
+
+本项目：要有一个在线文档编辑器——Markdown的 & 在线代码编辑器——用微软的  
+so，要先把上述两个组件接入
+
+###### 1. bytemd md编辑器
+
+bytemd => https://github.com/bytedance/bytemd
+> npm i @bytemd/vue-next
+
+安装vue3的bytemd的包
+
+> npm i @bytemd/plugin-gfm
+> npm i @bytemd/plugin-highlight
+
+安装markdown中支持GFM 和 高亮 的两个组件
+
+新建一个api文件 "yhyoj_frontend/src/components/MdEditor.vue"  
+同时要把MdEditor 当前输入的值暴露给父组件，便于父组件去使用，同时提高组件的同用性，需要定义属性，要把value 和 handleChange
+事件交给父组件去管理
+
+```vue
+
+<template>
+  <Editor :value="value" :plugins="plugins" @change="handleChange"/>
+</template>
+
+<script setup lang="ts">
+  import gfm from "@bytemd/plugin-gfm";
+  import highlight from "@bytemd/plugin-highlight";
+  import {Editor, Viewer} from "@bytemd/vue-next";
+  import {ref, withDefaults, defineProps} from "vue";
+
+  /**
+   * 定义组件属性的类型
+   */
+  interface Props {
+    value: string;
+    handleChange: (v: string) => void;
+  }
+
+  const plugins = [
+    gfm(),
+    highlight(),
+    // Add more plugins here
+  ];
+  const props = withDefaults(defineProps<Props>(), {
+    value: () => "",
+    handleChange: (v: string) => {
+      console.log(v);
+    },
+  });
+</script>
+<style scoped></style>
+```
+
+###### 2. Monaco Editor 代码编辑器
+
+微软官方 => https://github.com/microsoft/monaco-editor  
+官方整合教程 => https://github.com/microsoft/monaco-editor/blob/main/docs/integrate-esm.md
+
+> npm install monaco-editor  
+> npm install monaco-editor-webpack-plugin
+
+在 vue.config 中添加 webpack 配置 yhyoj_frontend/vue.config.js
+
+```ts
+const {defineConfig} = require("@vue/cli-service");
+const MonacoWebpackPlugin = require("monaco-editor-webpack-plugin");
+
+module.exports = defineConfig({
+    transpileDependencies: true,
+    chainWebpack(config) {
+        config.plugin("monaco").use(new MonacoWebpackPlugin({}));
+    },
+});
+```
+
+新建文件yhyoj_frontend/src/components/CodeEditor.vue(非终版，有东西是写死的)，对monaco editor进行配置
+
+```vue
+<
+<template>
+  <div id="code-editor" ref="codeEditorRef" style="min-height: 400px"/>
+  <!--  <a-button @click="fillValue">填充值</a-button>-->
+</template>
+
+<script setup lang="ts">
+  import * as monaco from "monaco-editor";
+  import {onMounted, ref, toRaw, defineProps, withDefaults} from "vue";
+
+  interface Props {
+    value: string;
+    handleChange: (v: string) => void;
+  }
+
+  const props = withDefaults(defineProps<Props>(), {
+    value: () => "",
+    handleChange: (v: string) => {
+      console.log();
+    },
+  });
+  const codeEditorRef = ref();
+  const codeEditor = ref();
+  const value = ref("hello world");
+
+  // const fillValue = () => {
+  //   if (!codeEditor.value) {
+  //     return;
+  //   }
+  //   toRaw(codeEditor.value).setValue("新的值");
+  // };
+  onMounted(() => {
+    if (!codeEditorRef.value) {
+      return;
+    }
+
+    codeEditor.value = monaco.editor.create(codeEditorRef.value, {
+      value: value.value,
+      language: "java",
+      automaticLayout: true,
+      minimap: {
+        enabled: true,
+      },
+      // lineNumbers: "off",
+      // roundedSelection: false,
+      // scrollBeyondLastLine: false,
+      readOnly: false,
+      theme: "vs-dark",
+    });
+
+    codeEditor.value.onDidChangeModelContent(() => {
+      console.log("目前的内容为：", toRaw(codeEditor.value).getValue());
+    });
+  });
+  // Hover on each property to see its docs!
+</script>
+<style scoped></style>
+```
+
+配置参数 参考 => http://chart.zhenglinglu.cn/pages/2244bd/#%E5%9C%A8-vue-%E4%B8%AD%E4%BD%BF%E7%94%A8
+
+### 页面开发
+
+#### 创建题目页面
+
+#### 题目管理页面
+
+#### 更新页面
+
+#### question
+
+1. vue中父子组件之间传值 & 相互管理 的操作 interface Props {xxxx} & const props = withDefaults
+2. 

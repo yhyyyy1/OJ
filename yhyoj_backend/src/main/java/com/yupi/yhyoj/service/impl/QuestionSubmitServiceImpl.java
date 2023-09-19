@@ -65,7 +65,7 @@ public class QuestionSubmitServiceImpl extends ServiceImpl<QuestionSubmitMapper,
         if (question == null) {
             throw new BusinessException(ErrorCode.NOT_FOUND_ERROR);
         }
-        // 是否已提交题目
+        // 是否已提交题目111111
         long userId = loginUser.getId();
         // 每个用户串行提交题目
         QuestionSubmit questionSubmit = new QuestionSubmit();
@@ -80,6 +80,7 @@ public class QuestionSubmitServiceImpl extends ServiceImpl<QuestionSubmitMapper,
         if (!save) {
             throw new BusinessException(ErrorCode.PARAMS_ERROR, "数据插入失败");
         }
+
         return questionSubmit.getId();
     }
 

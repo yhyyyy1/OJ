@@ -8,6 +8,8 @@
 毕竟后端的 api接口 & 数据库的myBatis 可以直接生成  
 而前端的各种功能也是很多都需要接入第三方的组件来实现，如何把这些组件和前端接到一起就是一个问题了（接入易、调通不易！）
 
+前端模板 拉day2的代码
+
 ### 系统功能梳理
 
 1. 用户模块
@@ -29,12 +31,15 @@
 
 * 前端：
   > Vue3、Arco Design 组件库、手撸项目模板 (✔)  
-  > 在线代码编辑器、在线文档浏览
+  > 在线代码编辑器、在线文档编辑 (✔)
 * 后端：
-  > Java 进程控制、Java安全管理器、部分JVM知识点
+  > Java 进程控制
+  > Java安全管理器
+  > 部分JVM知识点
 * 服务器：
-  > 虚拟机 (云服务器) 、Docker (代码沙箱实现)  
-  Spring Cloud 微服务、消息队列、多种设计模式
+  > 虚拟机 (云服务器)
+  > Docker (代码沙箱实现)  
+  > Spring Cloud 微服务、消息队列、多种设计模式
 
 ## Day1 2023.9.11
 
@@ -219,7 +224,7 @@ router.beforeEach((to, from, next) => {
 
 app.vue中，见doInit & onMounted
 
-## 前端初始化到此为止！下面是后端
+## 前端初始化到此为止！下面是后端!!!!!!!!!!!!!!!!!(SO 前端模板 拉day2的代码)
 
 后端主要用的是 《后端模板》，详见本人 springboot-init项目
 
@@ -240,6 +245,8 @@ app.vue中，见doInit & onMounted
 6. **启动！！！！一定要启动main中的MainApplication文件**
    血泪史，没看清，自己瞎搞了半天，发现是启动错文件了，淦！！！！！
 7. 接下来启动http://localhost:8121(定义的端口号)/api/doc.html
+   http://localhost:8121(定义的端口号)/api/v2/api-docs，后端接口的参数之类的东西
+
 8. 日志部分没有完善哦~
 
 ## Day3 2023.9.13
@@ -697,7 +704,7 @@ sqlfather——代码生成器，等学完设计模式，自己写一套
 
 ### 接入要用到的组件
 
-开工之前要进行技术选型！  
+开工之前要进行技术选型！
 
 本项目：要有一个在线文档编辑器——Markdown的 & 在线代码编辑器——用微软的  
 so，要先把上述两个组件接入
@@ -778,7 +785,7 @@ module.exports = defineConfig({
 新建文件yhyoj_frontend/src/components/CodeEditor.vue(非终版，有东西是写死的)，对monaco editor进行配置
 
 ```vue
-<
+
 <template>
   <div id="code-editor" ref="codeEditorRef" style="min-height: 400px"/>
   <!--  <a-button @click="fillValue">填充值</a-button>-->
@@ -841,7 +848,36 @@ module.exports = defineConfig({
 
 ### 页面开发
 
+因为之前后端实现了一些新的类，需要更新一下接口，因此需要再次执行openapi的命令，再次自动生成接口  
+注意每次openapi的代码执行后，对generated的操作 都要再来一次。(如 本项目的 openapi.ts 中的 WITH_CREDENTIALS: true )
+> openapi --input http://localhost:8121/api/v2/api-docs --output ./generated --client axios
+
 #### 创建题目页面
+
+用户提交需要用户输入的值
+
+```json
+{
+   "answer": "暴力破解",
+   "content": "题目内容",
+   "judgeCase": [
+      {
+         "input": "1 2",
+         "output": "3 4"
+      }
+   ],
+   "judgeConfig": {
+      "memoryLimit": 1000,
+      "stackLimit": 1000,
+      "timeLimit": 1000
+   },
+   "tags": [
+      "栈",
+      "简单"
+   ],
+   "title": "A + B"
+}  
+```
 
 #### 题目管理页面
 

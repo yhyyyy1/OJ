@@ -3,8 +3,8 @@
 /* tslint:disable */
 /* eslint-disable */
 
-export type UserRegisterRequest = {
-    checkPassword?: string;
-    userAccount?: string;
-    userPassword?: string;
+export type QuestionSubmitAddRequest = {
+    code?: string;
+    language?: string;
+    questionId?: number;
 };

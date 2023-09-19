@@ -3,8 +3,7 @@
 /* tslint:disable */
 /* eslint-disable */
 
-export type UserRegisterRequest = {
-    checkPassword?: string;
-    userAccount?: string;
-    userPassword?: string;
+export type JudgeCase = {
+    input?: string;
+    output?: string;
 };

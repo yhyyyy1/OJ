@@ -93,15 +93,32 @@
 </template>
 
 <script setup lang="ts">
-import { reactive, ref } from "vue";
+import { onMounted, ref } from "vue";
+import MdEditor from "@/components/MdEditor.vue";
+import { QuestionControllerService } from "../../../generated";
+import message from "@arco-design/web-vue/es/message";
+import { useRoute } from "vue-router";
 
-const form = reactive({
-  answer: "暴力破解",
-  content: "题目内容",
+const route = useRoute();
+//如果路由页面地址包含update，视为更新页面；不含则为添加页面
+const updatePage = route.path.includes("update");
+
+let form = ref({
+  answer: "",
+  content:
+    "## 题目描述\n" +
+    "\n" +
+    "## 输入描述\n" +
+    "\n" +
+    "## 输出描述\n" +
+    "\n" +
+    "### 样例输入\n" +
+    "\n" +
+    "### 样例输出",
   judgeCase: [
     {
-      input: "1 2",
-      output: "3 4",
+      input: "",
+      output: "",
     },
   ],
   judgeConfig: {
@@ -109,19 +126,77 @@ const form = reactive({
     stackLimit: 1000,
     timeLimit: 1000,
   },
-  tags: ["栈", "简单"],
-  title: "A + B",
+  tags: [],
+  title: "",
+});
+/**
+ * 根据题目 id 加载数据
+ */
+const loadData = async () => {
+  const id = route.query.id;
+  if (!id) {
+    return;
+  }
+  const res = await QuestionControllerService.getQuestionByIdUsingGet(
+    id as any
+  );
+  if (res.code === 0) {
+    form.value = res.data as any;
+    if (!form.value.judgeCase) {
+      form.value.judgeCase = [
+        {
+          input: "",
+          output: "",
+        },
+      ];
+    } else {
+      form.value.judgeCase = JSON.parse(form.value.judgeCase as any);
+    }
+    if (!form.value.judgeConfig) {
+      form.value.judgeConfig = {
+        memoryLimit: 1000,
+        stackLimit: 1000,
+        timeLimit: 1000,
+      };
+    } else {
+      form.value.judgeConfig = JSON.parse(form.value.judgeConfig as any);
+    }
+    if (!form.value.tags) {
+      form.value.tags = [];
+    } else {
+      form.value.tags = JSON.parse(form.value.tags as any);
+    }
+  } else {
+    message.error("数据加载失败：" + res.message);
+  }
+};
+
+onMounted(() => {
+  loadData();
 });
 /**
  * 向后端提交
  */
 const doSubmit = async () => {
-  console.log(form);
-  const res = await QuestionControllerService.addQuestionUsingPost(form);
-  if (res.code === 0) {
-    message.success("题目创建成功");
+  if (updatePage) {
+    //当前页面时更新页面
+    const res = await QuestionControllerService.updateQuestionUsingPost(
+      form.value
+    );
+    if (res.code === 0) {
+      message.success("题目创建成功");
+    } else {
+      message.error("创建失败：" + res.message);
+    }
   } else {
-    message.error("创建失败：" + res.message);
+    const res = await QuestionControllerService.addQuestionUsingPost(
+      form.value
+    );
+    if (res.code === 0) {
+      message.success("题目创建成功");
+    } else {
+      message.error("创建失败：" + res.message);
+    }
   }
 };
 
@@ -129,7 +204,7 @@ const doSubmit = async () => {
  * 新增判题用例
  */
 const handleAdd = () => {
-  form.judgeCase.push({
+  form.value.judgeCase.push({
     input: "",
     output: "",
   });
@@ -139,20 +214,17 @@ const handleAdd = () => {
  * @param index
  */
 const handleDelete = (index: number) => {
-  form.judgeCase.splice(index, 1);
+  form.value.judgeCase.splice(index, 1);
 };
 /**
  * md编辑器，实时显示，同时要区分是Content的 or Answer的
  */
 const onContentChange = (v: string) => {
-  form.content = v;
+  form.value.content = v;
 };
 const onAnswerChange = (v: string) => {
-  form.answer = v;
+  form.value.answer = v;
 };
-import MdEditor from "@/components/MdEditor.vue";
-import { QuestionControllerService } from "../../../generated";
-import message from "@arco-design/web-vue/es/message";
 </script>
 
 <style scoped>

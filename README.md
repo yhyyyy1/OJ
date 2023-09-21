@@ -8,7 +8,9 @@
 毕竟后端的 api接口 & 数据库的myBatis 可以直接生成  
 而前端的各种功能也是很多都需要接入第三方的组件来实现，如何把这些组件和前端接到一起就是一个问题了（接入易、调通不易！）
 
-前端模板 拉day2的代码
+tabnine真他娘的好用啊 我日！！！！！！！！！
+
+**前端模板 去拉day2的代码**
 
 ### 系统功能梳理
 
@@ -506,6 +508,7 @@ openapi --input http://localhost:8121/api/v2/api-docs --output ./generated --cli
     ```
    这里的...是什么意思？
    > 经过查资料 ...是保证单向的数据传递，确保状态的不可变性和可预测性。。。。。
+   > 其实就是获取之前这个参数的值
 3. await store.dispatch("user/getLoginUser");  
    await 是干嘛的——异步变同步
    > await 关键字用于等待一个异步操作的完成，使异步代码看起来像同步代码一样执行。  
@@ -852,38 +855,255 @@ module.exports = defineConfig({
 注意每次openapi的代码执行后，对generated的操作 都要再来一次。(如 本项目的 openapi.ts 中的 WITH_CREDENTIALS: true )
 > openapi --input http://localhost:8121/api/v2/api-docs --output ./generated --client axios
 
-#### 创建题目页面
+#### 页面1 创建题目页面
 
 用户提交需要用户输入的值
 
 ```json
 {
-   "answer": "暴力破解",
-   "content": "题目内容",
-   "judgeCase": [
-      {
-         "input": "1 2",
-         "output": "3 4"
-      }
-   ],
-   "judgeConfig": {
-      "memoryLimit": 1000,
-      "stackLimit": 1000,
-      "timeLimit": 1000
-   },
-   "tags": [
-      "栈",
-      "简单"
-   ],
-   "title": "A + B"
+  "answer": "暴力破解",
+  "content": "题目内容",
+  "judgeCase": [
+    {
+      "input": "1 2",
+      "output": "3 4"
+    }
+  ],
+  "judgeConfig": {
+    "memoryLimit": 1000,
+    "stackLimit": 1000,
+    "timeLimit": 1000
+  },
+  "tags": [
+    "栈",
+    "简单"
+  ],
+  "title": "A + B"
 }  
 ```
 
-#### 题目管理页面
+## Day9&10 2023.9.20&21
 
-#### 更新页面
+#### 页面2 题目管理页面
+
+**对于数据的引用，如果报错data is not iterable**
+
+```
+TypeError: data is not iterabledata is not iterable
+TypeError: data is not iterable
+```
+
+可以看一下数据的引用是否正确，可以尝试将数据输出console.log，找到对应的数据然后再针对性的输出
+
+#### 页面3 更新页面
+
+从题目管理页面的表单中，通过doUpdate函数直接跳转到AddQuestionView页面  
+那么问题来了！  
+从首页的创建题目进入的是AddQuestionView页面；从doUpdate进入的也是AddQuestionView还携带题目id的参数  
+怎么解决呢？  
+那就是！对于这个页面再添加一个路由——每个功能独占一个路由，通过是否传入id进行区分！——天才的想法，之前做ELM时能知道该多好...
+
+**更新页面相比于创建页面多出来的改动**
+
+1. 更新页面在加载时需要加载出之前的数据
+2. 在提交时请求的接口，地址不同
+
+###### 当前代码优化：debug
+
+1. 菜单——权限控制 & 显示隐藏
+   改routes.ts
+2. 管理页面——分页问题处理
+   在分页页号改变时，触发`@page-change="onPageChange"`，通过改变searchParams的值，触发watchEffect对loadData的调用loadData函数，最终实现显示页面的更新
+3. 修复页面刷新仍显示未登录问题
+   更新index.ts，在用户登陆后，重新获取当前用户的登录信息`loginUser = store.state.user.loginUser;`
+
+#### 页面4 题目列表 & 搜索
+
+和题目管理页面是相似的样式 so 嘿嘿  
+但是只需要保留部分columns字段  
+对于部分表格列自己进行渲染——如通过率、tags、创建时间——上述的内容都是通过给表单 插入插槽来实现的
+
+加入搜索功能选项，搜索框
+
+#### 页面5 题目浏览页 or 做题页
+
+```
+{
+   path: "/view/question/:id",
+           name: "在线做题",
+           component: ViewQuestionView,
+           props: true,
+           meta: {
+      access: AccessEnum.USER,
+              hideInMenu: true,
+   },
+},
+```
+
+先定义动态参数路由，开启props为true，可以在页面的props中直接获取到动态参数——题目id
+
+定义页面布局——左侧题目信息，右侧代码编辑器
+
+### 判题模块预开发
+
+判题服务 —— 连接代码沙箱 & 用户  
+代码沙箱只负责运行代码并输出结果  
+判题模块负责检查代码是否正确 & 调用代码沙箱并将代码和判题输入代码传入 & 根据输入输出和判题样例进行比较给出结果
+
+两者的业务流程：（两者通过API交互，实现解耦）
+
+1. 判题模块——发送题目代码，题目的输入用例（输出留着自己用）
+2. 代码沙箱——编译执行代码，得到一组运行结果
+3. 代码沙箱——返回执行结果（一组程序输出、执行信息、执行状态、执行环境信息）
+4. 判题模块——根据规则来判题（如：对比输入输出是否一致）
+
+#### 代码沙箱：CodeSandBox
+
+1. 定义代码沙箱的接口，提高通用性！！  
+   之后项目只调用接口，不调用具体的实现类；如此一来使用其他的代码沙箱实现类时，就不用去修改名称，便于扩展
+   ```java
+   package com.yupi.yhyoj.judge.codesandbox;
+   
+   public interface CodeSandBox {
+   ExcuteCodeResponse excuteCode(ExcuteCodeRequest excuteCodeRequest);
+   }
+   ```
+   扩展思路：提供一共获取沙箱状态的接口
+2. 定义多种不同的代码沙箱实现  
+   示例代码沙箱——仅为了跑通业务流程  
+   远程代码沙箱——实际调用接口的沙箱  
+   第三方带啊吗沙箱——调用网上现成的沙箱
+3. 编写单元测试，验证单个代码沙箱的执行
+   ```javascript
+   package com.yupi.yhyoj.judge.codesandbox;
+
+   import com.yupi.yhyoj.judge.codesandbox.impl.ExampleCodeSandBoxImpl;
+   import com.yupi.yhyoj.judge.codesandbox.model.ExecuteCodeRequest;
+   import com.yupi.yhyoj.judge.codesandbox.model.ExecuteCodeResponse;
+   import com.yupi.yhyoj.model.enums.QuestionSubmitLanguageEnum;
+   import org.junit.jupiter.api.Assertions;
+   import org.junit.jupiter.api.Test;
+   
+   import java.util.Arrays;
+   import java.util.List;
+   
+   class CodeSandBoxTest {
+
+    @Test
+    void executeCode() {
+        CodeSandBox codeSandBox = new ExampleCodeSandBoxImpl();
+        String code = "int main() {}";
+        String language = QuestionSubmitLanguageEnum.JAVA.getValue();
+        List<String> inputList = Arrays.asList("1 2", "3 4");
+        ExecuteCodeRequest executeCodeRequest = ExecuteCodeRequest.builder()
+                .code(code)
+                .inputList(inputList)
+                .language(language)
+                .build();
+        ExecuteCodeResponse executeCodeResponse = codeSandBox.executeCode(executeCodeRequest);
+        Assertions.assertNotNull(executeCodeResponse);
+    }
+
+   }
+
+   ```
+   现在的问题是，我们把new某个沙箱的代码写死了，如果后面项目要改用其他沙箱，可能要改很多地方的代码
+4. 上面的问题的解决——使用工厂模式，根据用户传入的字符串参数（沙箱类别），来生成对应的沙箱实现类  
+   此处使用静态工厂模式，实现比较简单，符合我们的需求
+
+```javascript
+   package com.yupi.yhyoj.judge.codesandbox;
+   import com.yupi.yhyoj.judge.codesandbox.impl.ExampleCodeSandBoxImpl;
+   import com.yupi.yhyoj.judge.codesandbox.impl.RemoteCodeSandBoxImpl;
+   import com.yupi.yhyoj.judge.codesandbox.impl.ThirdPartyCodeSandBoxImpl;
+   /**
+   * 代码沙箱工厂（根据字符串中的参数，创建指定的代码沙箱实现）
+   */
+   public class CodeSandBoxFactory {
+      public static CodeSandBox newInstance (String type) {
+         switch (type) {
+            case "example":
+               return new ExampleCodeSandBoxImpl();
+            case "remote":
+               return new RemoteCodeSandBoxImpl();
+            case "thirdParty":
+               return new ThirdPartyCodeSandBoxImpl();
+            default:
+               return new ExampleCodeSandBoxImpl();
+         }
+      }
+   }
+```
+
+5. 参数配置化，把项目中的一些可以交给用户去自定义的选项或字符串，写到配置文件中。
+   这样开发者只需要改配置文件，而不需要去看你的项目代码，就能够自定义使用你项目的更多功能。
+   > codesandbox:  
+   > ____type: thirdParty(____表示空格)
+
+   > type的值通过@Value进行注入  
+   > @Value("${codesandbox.type:example}")  
+   > private String type;  
+   > （一定要加@SpringBootTest）
+6. 代码沙箱的能力增强——代理模式  
+   比如:我们需要在调用代码沙箱前，输出请求参数日志，在代码沙箱调用后，输出响应结果日志，便于管理员去析。  
+   每个代码沙箱类都写一遍 log.info? 难道每次调用代码沙箱前后都执行 log?
+
+   使用代理模式，提供一个 Proxy，来增强代码沙箱的能力 (代理模式的作用就是增强能力)需要用户自己去调用多次  
+   原本: 需要用户去调用多次  
+   使用代理后：使用代理后:不仅不用改变原本的代码沙箱实现类，而且对调用者来说，调用方式几乎没有改变，也不需要在每个调用沙箱的地方去写统计代码。
+
+   ##### 代理模式的实现原理
+    1. 实现被代理的接口
+    2. 通过构造函数接受一个被代理的接口实现类
+    3. 调用被代理的接口实现类，在调用前后增加对应的操作
+   ```javascript
+   package com.yupi.yhyoj.judge.codesandbox;
+
+   import com.yupi.yhyoj.judge.codesandbox.model.ExecuteCodeRequest;
+   import com.yupi.yhyoj.judge.codesandbox.model.ExecuteCodeResponse;
+   import lombok.extern.slf4j.Slf4j;
+   
+   @Slf4j
+   public class CodeSandboxProxy implements CodeSandbox {
+
+    private final CodeSandbox codeSandbox;
+
+
+    public CodeSandboxProxy(CodeSandbox codeSandbox) {
+        this.codeSandbox = codeSandbox;
+    }
+
+    @Override
+    public ExecuteCodeResponse executeCode(ExecuteCodeRequest executeCodeRequest) {
+        log.info("代码沙箱请求信息：" + executeCodeRequest.toString());
+        ExecuteCodeResponse executeCodeResponse = codeSandbox.executeCode(executeCodeRequest);
+        log.info("代码沙箱响应信息：" + executeCodeResponse.toString());
+        return executeCodeResponse;
+    }
+
+   }
+   ```
+   使用方式：
+   ```javascript
+   CodeSandbox codeSandbox = CodeSandboxFactory.newInstance(type);
+   codeSandbox = new CodeSandboxProxy(codeSandbox);
+   ```
+7. 实现实例的代码沙箱
+   ```javascript
+   ```
 
 #### question
 
 1. vue中父子组件之间传值 & 相互管理 的操作 interface Props {xxxx} & const props = withDefaults
-2. 
+2. 实体类中添加这些东西是干嘛的呢。。
+   ```javascript
+   @Data
+   @Builder
+   @NoArgsConstructor
+   @AllArgsConstructor
+   ```
+
+`@Builder`的用法：链式赋值？
+
+3. 
+

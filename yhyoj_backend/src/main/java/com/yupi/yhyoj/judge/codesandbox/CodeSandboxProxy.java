@@ -4,6 +4,9 @@ import com.yupi.yhyoj.judge.codesandbox.model.ExecuteCodeRequest;
 import com.yupi.yhyoj.judge.codesandbox.model.ExecuteCodeResponse;
 import lombok.extern.slf4j.Slf4j;
 
+/**
+ * 统一的获取执行信息 log 的方法
+ */
 @Slf4j
 public class CodeSandboxProxy implements CodeSandbox {
 

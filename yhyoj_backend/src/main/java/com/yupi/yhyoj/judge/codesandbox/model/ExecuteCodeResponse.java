@@ -22,7 +22,7 @@ public class ExecuteCodeResponse {
     /**
      * 执行状态
      */
-    private String status;
+    private Integer status;
     /**
      * code程序执行信息
      * 包括memory time message

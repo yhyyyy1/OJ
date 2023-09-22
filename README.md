@@ -957,7 +957,7 @@ TypeError: data is not iterable
 3. 代码沙箱——返回执行结果（一组程序输出、执行信息、执行状态、执行环境信息）
 4. 判题模块——根据规则来判题（如：对比输入输出是否一致）
 
-#### 代码沙箱：CodeSandBox
+#### 代码沙箱：CodeSandBox 架构
 
 1. 定义代码沙箱的接口，提高通用性！！  
    之后项目只调用接口，不调用具体的实现类；如此一来使用其他的代码沙箱实现类时，就不用去修改名称，便于扩展
@@ -1012,27 +1012,50 @@ TypeError: data is not iterable
    此处使用静态工厂模式，实现比较简单，符合我们的需求
 
 ```javascript
-   package com.yupi.yhyoj.judge.codesandbox;
-   import com.yupi.yhyoj.judge.codesandbox.impl.ExampleCodeSandBoxImpl;
-   import com.yupi.yhyoj.judge.codesandbox.impl.RemoteCodeSandBoxImpl;
-   import com.yupi.yhyoj.judge.codesandbox.impl.ThirdPartyCodeSandBoxImpl;
-   /**
-   * 代码沙箱工厂（根据字符串中的参数，创建指定的代码沙箱实现）
-   */
-   public class CodeSandBoxFactory {
-      public static CodeSandBox newInstance (String type) {
-         switch (type) {
-            case "example":
-               return new ExampleCodeSandBoxImpl();
-            case "remote":
-               return new RemoteCodeSandBoxImpl();
-            case "thirdParty":
-               return new ThirdPartyCodeSandBoxImpl();
-            default:
-               return new ExampleCodeSandBoxImpl();
-         }
-      }
-   }
+   package
+com.yupi.yhyoj.judge.codesandbox;
+import com
+
+.
+yupi.yhyoj.judge.codesandbox.impl.ExampleCodeSandBoxImpl;
+import com
+
+.
+yupi.yhyoj.judge.codesandbox.impl.RemoteCodeSandBoxImpl;
+import com
+
+.
+yupi.yhyoj.judge.codesandbox.impl.ThirdPartyCodeSandBoxImpl;
+/**
+ * 代码沙箱工厂（根据字符串中的参数，创建指定的代码沙箱实现）
+ */
+public
+
+class CodeSandBoxFactory {
+    public static CodeSandBox
+
+    newInstance(String
+
+    type
+) {
+    switch(type) {
+    case
+        "example"
+    :
+        return new ExampleCodeSandBoxImpl();
+    case
+        "remote"
+    :
+        return new RemoteCodeSandBoxImpl();
+    case
+        "thirdParty"
+    :
+        return new ThirdPartyCodeSandBoxImpl();
+    default:
+        return new ExampleCodeSandBoxImpl();
+    }
+}
+}
 ```
 
 5. 参数配置化，把项目中的一些可以交给用户去自定义的选项或字符串，写到配置文件中。
@@ -1044,18 +1067,20 @@ TypeError: data is not iterable
    > @Value("${codesandbox.type:example}")  
    > private String type;  
    > （一定要加@SpringBootTest）
-6. 代码沙箱的能力增强——代理模式  
-   比如:我们需要在调用代码沙箱前，输出请求参数日志，在代码沙箱调用后，输出响应结果日志，便于管理员去析。  
-   每个代码沙箱类都写一遍 log.info? 难道每次调用代码沙箱前后都执行 log?
+6. 代码沙箱的能力增强——**代理模式**  
+   比如:我们需要在调用代码沙箱前，输出请求参数日志；  
+   在代码沙箱调用后，输出响应结果日志，便于管理员去析。  
+   每个代码沙箱类都写一遍 log.info? 难道每次调用代码沙箱前后都执行 log?（log执行要用到`@Slf4j`）
 
-   使用代理模式，提供一个 Proxy，来增强代码沙箱的能力 (代理模式的作用就是增强能力)需要用户自己去调用多次  
+   使用代理模式，提供一个 Proxy，来增强代码沙箱的能力 (代理模式的作用就是增强能力)  
    原本: 需要用户去调用多次  
-   使用代理后：使用代理后:不仅不用改变原本的代码沙箱实现类，而且对调用者来说，调用方式几乎没有改变，也不需要在每个调用沙箱的地方去写统计代码。
+   使用代理后：不仅不用改变原本的代码沙箱实现类(通过代理类来调用代码沙箱)，而且对调用者来说，调用方式几乎没有改变，也不需要在每个调用沙箱的地方去写统计代码。
 
    ##### 代理模式的实现原理
     1. 实现被代理的接口
     2. 通过构造函数接受一个被代理的接口实现类
     3. 调用被代理的接口实现类，在调用前后增加对应的操作
+
    ```javascript
    package com.yupi.yhyoj.judge.codesandbox;
 
@@ -1090,7 +1115,62 @@ TypeError: data is not iterable
    ```
 7. 实现实例的代码沙箱
    ```javascript
-   ```
+   /**
+   * 实例代码沙箱（仅为了跑通业务流程）
+   */
+     public class ExampleCodeSandbox implements CodeSandbox {
+        @Override
+        public ExecuteCodeResponse executeCode(ExecuteCodeRequest executeCodeRequest) {
+            List<String> inputList = executeCodeRequest.getInputList();
+            JudgeInfo judgeInfo = new JudgeInfo();
+            judgeInfo.setMemory(100L);
+            judgeInfo.setTime(100L);
+            judgeInfo.setMessage(JudgeInfoMessageEnum.ACCEPTED.getValue());
+
+            // todo 现在是写死的返回情况，之后要给写活
+            ExecuteCodeResponse executeCodeResponse = new ExecuteCodeResponse();
+            executeCodeResponse.setOutputsList(inputList);
+            executeCodeResponse.setMessage("测试成功");
+            executeCodeResponse.setStatus(QuestionSubmitStatusEnum.SUCCEED.getValue());
+            executeCodeResponse.setJudgeInfo(judgeInfo);
+            return executeCodeResponse;;
+        }
+     }
+      ```
+
+#### 判题服务完整业务流程
+
+业务流程：
+
+1. 传入题目的提交id，获取对应题目的Submit信息，code language等信息
+2. 判断题目的提交状态，如果不为“等待中”就不用重复执行了
+3. 获取到题目信息后，更改题目的判题状态为“判题中”
+4. 调用沙箱，获取执行结果
+5. 根据沙箱返回的结果，进行判断，设置题目的判题状态和信息
+   判断逻辑：
+    1. 先判断沙箱执行的结果输出数量是否和预期输出数量相等
+    2. 依次判断每项输出和预期输出是否相等
+    3. 判断题目的限制是否符合要求
+    4. 可能还有其他
+6. 修改数据库中判题结果
+#### 策略模式优化
+
+**策略模式**  
+我们的判题策略可能会有很多种  
+比如: 我们的代码沙箱本身执行程序需要消耗时间，这个时间可能不同的编程语言是不同的，比如沙箱执行 Java 要额外花 10 秒。  
+我们可以采用策略模式，针对不同的情况，定义独立的策略，便于分别修改策略和维护。而不是把所有的判题逻辑、if ... else ...
+代码全部混在一起写。
+
+###### 实现步骤：
+
+1. 定义判题策略接口，让代码更加通用化
+2. 定义判题上下文对象，用于定义在策略中传递的参数 (可以理解为一种 DTO)
+3. 实现默认判题策略，先把judgeService 中的代码搬运过来
+4. 再新增一种判题策略，通过 if ... else ... 的方式选择使用哪种策略   
+   但是，如果选择某种判题策略的过程比较复杂，如果都写在调用判题服务的代码中，代码会越来越复杂，会有大量 if ... else
+   ...，所以建议单独编写一个判断策略的类。
+5. 定义JudgeManager，目的是尽量简化对判题功能的调用，让调用方写最少的代码、调用最简单。对于判题策略的选取，也是在
+   JudgeManager 里处理的。
 
 #### question
 
@@ -1102,8 +1182,16 @@ TypeError: data is not iterable
    @NoArgsConstructor
    @AllArgsConstructor
    ```
+   `@Builder`的用法：链式赋值？ YES
+   ```javascript
+   ExecuteCodeRequest executeCodeRequest = ExecuteCodeRequest.builder()
+                    .code(code)
+                    .inputList(inputList)
+                    .language(language)
+                    .build();
+   ```
 
-`@Builder`的用法：链式赋值？
-
-3. 
+3. judgeInfo.setMemory(100L);
+   judgeInfo.setTime(100L); 这里的100L是什么意思？  
+   毫秒？
 

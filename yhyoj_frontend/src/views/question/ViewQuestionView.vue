@@ -35,7 +35,7 @@
           <a-tab-pane key="comment" title="评论" disabled> 评论区</a-tab-pane>
           <a-tab-pane key="answer" title="答案">
             <a-card>
-              你点你m呢自己不会写？<br />
+              你点你m呢?自己不会写？<br />
               真把自己当成个fw了？<br />
               蠢狗！<br />
             </a-card>

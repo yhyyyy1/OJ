@@ -308,7 +308,7 @@ openapi --input http://localhost:8121/api/v2/api-docs --output ./generated --cli
 
 **如果想要自定义参数**
 
-1) 修改generated/core/OpenAPI.ts文件中，对应的参数
+1. 修改generated/core/OpenAPI.ts文件中，对应的参数
     ```ts
     export const OpenAPI: OpenAPIConfig = {
         BASE: 'http://localhost:3000/api',
@@ -322,7 +322,7 @@ openapi --input http://localhost:8121/api/v2/api-docs --output ./generated --cli
         ENCODE_PATH: undefined,
     };
    ```
-2) 直接定义axios 请求库的全局参数，如全局请求响应拦截器
+2. 直接定义axios 请求库的全局参数，如全局请求响应拦截器
     ```ts
     //new 了一个yhyoj_frontend/src/plugins/axios.ts
     // Add a request interceptor
@@ -787,8 +787,7 @@ module.exports = defineConfig({
 
 新建文件yhyoj_frontend/src/components/CodeEditor.vue(非终版，有东西是写死的)，对monaco editor进行配置
 
-```vue
-
+```js
 <template>
   <div id="code-editor" ref="codeEditorRef" style="min-height: 400px"/>
   <!--  <a-button @click="fillValue">填充值</a-button>-->
@@ -927,7 +926,7 @@ TypeError: data is not iterable
 
 #### 页面5 题目浏览页 or 做题页
 
-```
+```ts
 {
    path: "/view/question/:id",
            name: "在线做题",
@@ -943,6 +942,9 @@ TypeError: data is not iterable
 先定义动态参数路由，开启props为true，可以在页面的props中直接获取到动态参数——题目id
 
 定义页面布局——左侧题目信息，右侧代码编辑器
+
+#### 页面6 题目提交浏览页
+
 
 ### 判题模块预开发
 
@@ -974,7 +976,7 @@ TypeError: data is not iterable
    远程代码沙箱——实际调用接口的沙箱  
    第三方带啊吗沙箱——调用网上现成的沙箱
 3. 编写单元测试，验证单个代码沙箱的执行
-   ```javascript
+   ```java
    package com.yupi.yhyoj.judge.codesandbox;
 
    import com.yupi.yhyoj.judge.codesandbox.impl.ExampleCodeSandBoxImpl;
@@ -1011,50 +1013,36 @@ TypeError: data is not iterable
 4. 上面的问题的解决——使用工厂模式，根据用户传入的字符串参数（沙箱类别），来生成对应的沙箱实现类  
    此处使用静态工厂模式，实现比较简单，符合我们的需求
 
-```javascript
-   package
-com.yupi.yhyoj.judge.codesandbox;
-import com
+```java
+package com.yupi.yhyoj.judge.codesandbox;
 
-.
-yupi.yhyoj.judge.codesandbox.impl.ExampleCodeSandBoxImpl;
-import com
+import com.yupi.yhyoj.judge.codesandbox.impl.ExampleCodeSandbox;
+import com.yupi.yhyoj.judge.codesandbox.impl.RemoteCodeSandbox;
+import com.yupi.yhyoj.judge.codesandbox.impl.ThirdPartyCodeSandbox;
 
-.
-yupi.yhyoj.judge.codesandbox.impl.RemoteCodeSandBoxImpl;
-import com
-
-.
-yupi.yhyoj.judge.codesandbox.impl.ThirdPartyCodeSandBoxImpl;
 /**
- * 代码沙箱工厂（根据字符串中的参数，创建指定的代码沙箱实现）
+ * 代码沙箱工厂（根据字符串参数创建指定的代码沙箱实例）
  */
-public
+public class CodeSandboxFactory {
 
-class CodeSandBoxFactory {
-    public static CodeSandBox
-
-    newInstance(String
-
-    type
-) {
-    switch(type) {
-    case
-        "example"
-    :
-        return new ExampleCodeSandBoxImpl();
-    case
-        "remote"
-    :
-        return new RemoteCodeSandBoxImpl();
-    case
-        "thirdParty"
-    :
-        return new ThirdPartyCodeSandBoxImpl();
-    default:
-        return new ExampleCodeSandBoxImpl();
+    /**
+     * 创建代码沙箱示例
+     *
+     * @param type 沙箱类型
+     * @return
+     */
+    public static CodeSandbox newInstance(String type) {
+        switch (type) {
+            case "example":
+                return new ExampleCodeSandbox();
+            case "remote":
+                return new RemoteCodeSandbox();
+            case "thirdParty":
+                return new ThirdPartyCodeSandbox();
+            default:
+                return new ExampleCodeSandbox();
+        }
     }
-}
 }
 ```
 
@@ -1081,7 +1069,7 @@ class CodeSandBoxFactory {
     2. 通过构造函数接受一个被代理的接口实现类
     3. 调用被代理的接口实现类，在调用前后增加对应的操作
 
-   ```javascript
+   ```java
    package com.yupi.yhyoj.judge.codesandbox;
 
    import com.yupi.yhyoj.judge.codesandbox.model.ExecuteCodeRequest;
@@ -1109,12 +1097,12 @@ class CodeSandBoxFactory {
    }
    ```
    使用方式：
-   ```javascript
+   ```java
    CodeSandbox codeSandbox = CodeSandboxFactory.newInstance(type);
    codeSandbox = new CodeSandboxProxy(codeSandbox);
    ```
 7. 实现实例的代码沙箱
-   ```javascript
+   ```java
    /**
    * 实例代码沙箱（仅为了跑通业务流程）
    */
@@ -1161,7 +1149,7 @@ class CodeSandBoxFactory {
 我们可以采用策略模式，针对不同的情况，定义独立的策略，便于分别修改策略和维护。而不是把所有的判题逻辑、if ... else ...
 代码全部混在一起写。
 
-###### 实现步骤：
+##### 实现步骤：
 
 1. 定义判题策略接口，让代码更加通用化
 2. 定义判题上下文对象，用于定义在策略中传递的参数 (可以理解为一种 DTO)
@@ -1169,21 +1157,291 @@ class CodeSandBoxFactory {
 4. 再新增一种判题策略，通过 if ... else ... 的方式选择使用哪种策略   
    但是，如果选择某种判题策略的过程比较复杂，如果都写在调用判题服务的代码中，代码会越来越复杂，会有大量 if ... else
    ...，所以建议单独编写一个判断策略的类。
-5. 定义JudgeManager，目的是尽量简化对判题功能的调用，让调用方写最少的代码、调用最简单。对于判题策略的选取，也是在
-   JudgeManager 里处理的。
+5. 定义JudgeManager，目的是尽量简化对判题功能的调用，让调用方写最少的代码、调用最简单。对于判题策略的选取，也是在 JudgeManager 里处理的。
+   ```java
+   package com.yupi.yhyoj.judge;
 
-#### question
+   import com.yupi.yhyoj.judge.strategy.DefaultJudgeStrategy;
+   import com.yupi.yhyoj.judge.strategy.JavaLanguageJudgeStrategy;
+   import com.yupi.yhyoj.judge.strategy.JudgeContext;
+   import com.yupi.yhyoj.judge.strategy.JudgeStrategy;
+   import com.yupi.yhyoj.model.dto.questionsubmit.JudgeInfo;
+   import com.yupi.yhyoj.model.entity.QuestionSubmit;
+   import org.springframework.stereotype.Service;
+
+   /**
+   * 判题管理（简化调用）
+   */
+   @Service
+   public class JudgeManager {
+
+      /**
+      * 执行判题
+      *
+      * @param judgeContext
+      * @return
+      */
+      JudgeInfo doJudge(JudgeContext judgeContext) {
+         QuestionSubmit questionSubmit = judgeContext.getQuestionSubmit();
+         String language = questionSubmit.getLanguage();
+         JudgeStrategy judgeStrategy = new DefaultJudgeStrategy();
+         if ("java".equals(language)) {
+               judgeStrategy = new JavaLanguageJudgeStrategy();
+         }
+         return judgeStrategy.doJudge(judgeContext);
+      }
+   }
+   ```
+
+   出现了循环依赖QuestionSubmitService 和 JudgeService互相调用了  
+   处理：加@lazy注解？lazyload？
+
+### 代码沙箱实现！！！！
+代码沙箱的作用——只负责接收值，运行代码，得出结果，不关注是否正确  
+记得之前有提到过，要通过api调用的方式去连接代码沙箱，所以需要新建一个Spring Boot Web项目（提供一个能执行代码、操作代码沙箱的接口）
+##### 项目初始化
+Maven、Java8、Springboot2.7  
+1. 编写启动配置
+      ```yaml
+      server:
+      port: 8090
+      ```
+2. 编写
+   ```java
+   package com.yupi.yhyojcodesandbox.controller;
+
+   import org.springframework.web.bind.annotation.GetMapping;
+   import org.springframework.web.bind.annotation.RestController;
+
+   @RestController("/")
+   public class MainController {
+      @GetMapping("/health")
+      public String healthCheck() {
+         return "OK";
+      }
+   }
+   ```
+#### 代码实现——Java原生实现
+代码沙箱需要：接收代码 => 编译代码（javac）=> 执行代码（java）  
+
+```
+javac .\SimpleCompute.java
+java -cp . SimpleCompute 1 2
+得到执行结果
+缁撴灉:3
+```
+
+乱码原因：终端是GBK编码，java代码文件本身是UTF-8编码两者不一致，导致乱码  
+解决方式：用'javac -encoding utf-8 xxxx路径'的方式去改（不要用chcp的方式去改变终端的编码方式——因为其他运行项目代码的人也要改变环境，兼容性很差）  
+
+限定用户输入的代码类名为Main——将文件名设置为Main（统一类名）
+
+##### 核心流程实现：
+核心实现思路：程序代替人工，用程序来操作命令，去编译执行代码
+核心依赖：Java进程类Process
+
+1. 把用户的代码保存为文件  
+   引入Hutool工具类，提升操作文件效率
+   ```xml
+   <!-- https://hutool.cn/docs/index.html#/-->
+        <dependency>
+            <groupId>cn.hutool</groupId>
+            <artifactId>hutool-all</artifactId>
+            <version>5.8.8</version>
+        </dependency>
+   ```
+   新建目录，将每个用户的代码都存放在独立目录下，通过 UUID 随机生成目录名，便于隔离和维护:
+   ```java
+   String userDir = System.getProperty("user.dir");
+   String globalCodePathName = userDir + File.separator + GLOBAL_CODE_DIR_NAME;
+   //判断全局代码目录是否存在，没有就新建
+   if (!FileUtil.exist(globalCodePathName)) {
+      FileUtil.mkdir(globalCodePathName);
+   }
+
+   //因为提交的代码都是Main，所以不可能都放在同一个目录下——分级
+   //将用户的代码分级存放
+   String userCodeParentPath = globalCodePathName + File.separator + UUID.randomUUID(); //父目录
+   String userCodePath = userCodeParentPath + File.separator + GLOBAL_JAVA_CLASS_NAME; //实际文件路径
+   FileUtil.writeString(code, userCodePath, StandardCharsets.UTF_8);
+   ```
+2. 编译代码文件，得到class文件  
+   2.1 java执行程序
+   ```java
+   String compileCmd = String.format("javac -encoding utf-8 %s", userCodeFile.getAbsoluteFile());
+   Process compileProcess = Runtime.getRuntime().exec(compileCmd);
+   ```
+   2.2 java获取控制台输出  
+   通过exitValue判断程序是否正常返回  
+   从inputStream（获取的是程序到控制台的input） 和 errorStream 获取控制台输出  
+   ```java
+   String compileCmd = String.format("javac -encoding utf-8 %s", userCodeFile.getAbsoluteFile());
+   try {
+      Process compileProcess = Runtime.getRuntime().exec(compileCmd);
+      //等待程序执行，获取错误码
+      int exitValue = compileProcess.waitFor();
+      if (exitValue == 0) {
+         //正常退出
+         System.out.println("compile success");
+         //获取控制台信息(逐行获取输出信息)
+         BufferedReader bufferedReader = new BufferedReader(new InputStreamReader(compileProcess.getInputStream()));
+         StringBuilder compileOutputStringBuilder = new StringBuilder();
+         String compileOutputLine;
+         while ((compileOutputLine = bufferedReader.readLine()) != null) {
+            compileOutputStringBuilder.append(compileOutputLine);
+         }
+         System.out.println(compileOutputStringBuilder.toString());
+      } else {
+         //异常退出
+         System.out.println("compile failed，错误码为：" + exitValue);
+         //获取控制台信息(逐行获取正常输出信息)
+         //注意是输入流getInputStream！！！
+         BufferedReader bufferedReader = new BufferedReader(new InputStreamReader(compileProcess.getInputStream()));
+         StringBuilder compileOutputStringBuilder = new StringBuilder();
+         String compileOutputLine;
+         while ((compileOutputLine = bufferedReader.readLine()) != null) {
+            compileOutputStringBuilder.append(compileOutputLine);
+         }
+         System.out.println(compileOutputStringBuilder.toString());
+         //获取控制台信息(逐行获取错误输出信息)
+         BufferedReader errorBufferedReader = new BufferedReader(new InputStreamReader(compileProcess.getErrorStream()));
+         StringBuilder errorCompileOutputStringBuilder = new StringBuilder();
+         String errorCompileOutputLine;
+         while ((errorCompileOutputLine = errorBufferedReader.readLine()) != null) {
+            errorCompileOutputStringBuilder.append(errorCompileOutputLine);
+         }
+         System.out.println(errorCompileOutputStringBuilder.toString());
+      }
+   } catch (IOException e) {
+      throw new RuntimeException(e);
+   } catch (InterruptedException e) {
+      throw new RuntimeException(e);
+   }
+   ```
+
+   2.3 改进后的代码：
+   ```java
+   String compileCmd = String.format("javac -encoding utf-8 %s", userCodeFile.getAbsoluteFile());
+      try {
+         Process compileProcess = Runtime.getRuntime().exec(compileCmd);
+         ExecuteMessage executeMessage = ProcessUtils.runProcessAndGetMessage(compileProcess,"编译");
+         System.out.println(executeMessage);
+      } catch (Exception e) {
+         throw new RuntimeException(e);
+      }
+   ```
+3. 执行代码得到输出结果  
+   
+   3.1 发现上面的代码中，从终端中获取inputStream和errorStream比较频繁，所以要编写一个对应的工具类：(执行进程 并且获取输出)
+   ```java
+   package com.yupi.yhyojcodesandbox.utils;
+   import com.yupi.yhyojcodesandbox.model.ExecuteMessage;
+   import java.io.BufferedReader;
+   import java.io.IOException;
+   import java.io.InputStreamReader;
+
+   /**
+   * 进程工具类
+   */
+   public class ProcessUtils {
+
+      /**
+      * 执行进程并获取信息
+      *
+      * @param runProcess
+      * @return
+      */
+      public static ExecuteMessage runProcessAndGetMessage(Process runProcess, String opName) {
+         int exitValue = 0;
+         ExecuteMessage executeMessage = new ExecuteMessage();
+         try {
+            exitValue = runProcess.waitFor();
+            executeMessage.setExitValue(exitValue);
+            if (exitValue == 0) {
+               //正常退出
+               System.out.println(opName + "成功");
+               //获取控制台信息(逐行获取输出信息)
+               BufferedReader bufferedReader = new BufferedReader(new InputStreamReader(runProcess.getInputStream()));
+               StringBuilder compileOutputStringBuilder = new StringBuilder();
+               String compileOutputLine;
+               while ((compileOutputLine = bufferedReader.readLine()) != null) {
+                  compileOutputStringBuilder.append(compileOutputLine);
+               }
+               executeMessage.setMessage(compileOutputStringBuilder.toString());
+            } else {
+               //异常退出
+               System.out.println(opName + "失败，错误码为：" + exitValue);
+               //获取控制台信息(逐行获取正常输出信息)
+               //注意是输入流getInputStream！！！
+               BufferedReader bufferedReader = new BufferedReader(new InputStreamReader(runProcess.getInputStream()));
+               StringBuilder compileOutputStringBuilder = new StringBuilder();
+               String compileOutputLine;
+               while ((compileOutputLine = bufferedReader.readLine()) != null) {
+                  compileOutputStringBuilder.append(compileOutputLine);
+               }
+               executeMessage.setMessage(compileOutputStringBuilder.toString());
+
+               //获取控制台信息(逐行获取错误输出信息)
+               BufferedReader errorBufferedReader = new BufferedReader(new InputStreamReader(runProcess.getErrorStream()));
+               StringBuilder errorCompileOutputStringBuilder = new StringBuilder();
+               String errorCompileOutputLine;
+               while ((errorCompileOutputLine = errorBufferedReader.readLine()) != null) {
+                  errorCompileOutputStringBuilder.append(errorCompileOutputLine);
+               }
+               executeMessage.setErrorMessage(errorCompileOutputStringBuilder.toString());
+            }
+         } catch (InterruptedException ex) {
+               throw new RuntimeException(ex);
+         } catch (IOException e) {
+               throw new RuntimeException(e);
+         }
+         return executeMessage;
+      }
+   }
+   ```
+   3.2 最终的实现代码，和2.3是相似的
+   ```java
+   for(String inputArgs : inputList) {
+      String runCmd = String.format("java -Dfile.encoding=utf-8 -cp %s Main %s", userCodeParentPath, inputArgs);
+      try {
+         Process runProcess = Runtime.getRuntime().exec(runCmd);
+         ExecuteMessage executeMessage = ProcessUtils.runProcessAndGetMessage(runProcess,"运行");
+         System.out.println(executeMessage);
+      } catch (IOException e) {
+         throw new RuntimeException(e);
+      }
+   }
+   ```
+4. 收集整理输出结果  
+   ```java
+   
+   ```
+5. 文件清理，释放空间  
+   ```java
+   ```
+6. 错误处理，提升程序健壮性  
+   ```java
+   ```
+
+
+#### 代码实现——Docker实现
+
+
+
+
+
+#### Question：
 
 1. vue中父子组件之间传值 & 相互管理 的操作 interface Props {xxxx} & const props = withDefaults
 2. 实体类中添加这些东西是干嘛的呢。。
-   ```javascript
+   ```java
    @Data
    @Builder
    @NoArgsConstructor
    @AllArgsConstructor
    ```
    `@Builder`的用法：链式赋值？ YES
-   ```javascript
+   ```java
    ExecuteCodeRequest executeCodeRequest = ExecuteCodeRequest.builder()
                     .code(code)
                     .inputList(inputList)
@@ -1194,4 +1452,12 @@ class CodeSandBoxFactory {
 3. judgeInfo.setMemory(100L);
    judgeInfo.setTime(100L); 这里的100L是什么意思？  
    毫秒？
+4. String globalCodePathName = userDir + File.separator +"tmpCode";
+   File.separator 分隔符——兼容windows的分隔符（为什么？不同OS的分隔符的区别？）
+5. UUID是干嘛的
+6. 魔法值？什么意思
+7. 
 
+#### 异常处理方式：
+运行程序报错，自己创建的程序包不存在  
+解决方法：执行maven管理中Lifecycle的clean？why？

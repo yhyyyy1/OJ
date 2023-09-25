@@ -6,8 +6,10 @@ import com.yupi.yhyoj.model.dto.user.UserQueryRequest;
 import com.yupi.yhyoj.model.entity.User;
 import com.yupi.yhyoj.model.vo.LoginUserVO;
 import com.yupi.yhyoj.model.vo.UserVO;
+
 import java.util.List;
 import javax.servlet.http.HttpServletRequest;
+
 import me.chanjar.weixin.common.bean.WxOAuth2UserInfo;
 
 /**
@@ -26,7 +28,7 @@ public interface UserService extends IService<User> {
      * @param checkPassword 校验密码
      * @return 新用户 id
      */
-    long userRegister(String userAccount, String userPassword, String checkPassword);
+    long userRegister(String userAccount, String userPassword, String checkPassword, String userName);
 
     /**
      * 用户登录

@@ -1412,17 +1412,128 @@ java -cp . SimpleCompute 1 2
       }
    }
    ```
+   3.3 拓展——做出交互式的
 4. 收集整理输出结果  
+   使用StopWatch来获取时间
    ```java
-   
+      ExecuteCodeResponse executeCodeResponse = new ExecuteCodeResponse();
+      List<String> outputList = new ArrayList<String>();
+
+      //取最大值，用于判断是否超时
+      long maxtime = 0;
+      for (ExecuteMessage executeMessage : executeMessageList) {
+         String errorMessage = executeMessage.getErrorMessage();
+         if (StrUtil.isNotEmpty(errorMessage)) {
+            //有错误信息
+            executeCodeResponse.setMessage(errorMessage);
+            executeCodeResponse.setStatus(3);
+            break;
+         }
+         outputList.add(executeMessage.getMessage());
+         Long time = executeMessage.getTime();
+         if (time != null) {
+               maxtime = Math.max(maxtime, time);
+         }
+      }
+      executeCodeResponse.setOutputsList(outputList);
+
+      if (outputList.size() == executeMessageList.size()) {
+         //正常完成
+         executeCodeResponse.setStatus(1);
+      }
+      JudgeInfo judgeInfo = new JudgeInfo();
+      judgeInfo.setTime(maxtime);
+      //获取内存占用很麻烦，此处不做实践
+      //        judgeInfo.setMemory();
+      executeCodeResponse.setJudgeInfo(judgeInfo);
    ```
 5. 文件清理，释放空间  
    ```java
+   if (userCodeFile.getParentFile() != null) {
+      boolean del = FileUtil.del(userCodeParentPath);
+      System.out.println("删除" + (del ? "成功" : "失败"));
+   }
    ```
 6. 错误处理，提升程序健壮性  
    ```java
+   /**
+   * 获取错误响应
+   * @param e
+   * @return
+   */
+   private ExecuteCodeResponse getErrorResponse(Throwable e) {
+      ExecuteCodeResponse executeCodeResponse = new ExecuteCodeResponse();
+      executeCodeResponse.setOutputsList(new ArrayList<String>());
+      executeCodeResponse.setMessage(e.getMessage());
+      //2表示代码沙箱错误
+      executeCodeResponse.setStatus(2);
+      executeCodeResponse.setJudgeInfo(new JudgeInfo());
+      return executeCodeResponse;
+   }
    ```
 
+##### 异常情况演示：（important）
+用户提交恶意代码怎么办
+1. 执行超时（时间上）  
+   eg：程序会一直等待线程苏醒
+   ```java
+   /**
+    * 无限睡眠（阻塞程序执行）
+    */
+   public class Main {
+       public static void main(String[] args) throws InterruptedException {
+           long ONE_HOUR = 60 * 60 * 1000L;
+           Thread.sleep(ONE_HOUR);
+           System.out.println("睡醒了");
+       }
+   }
+   ```
+2. 占用内存（空间上）  
+   eg：程序会卡死（但是实际运行中，我们会发现，内存占用到达一定程度后，程序会自动报错：java.lang.OutOfMemoryError: Java heap space——这是一个 JVM 保护机制）
+   ```java
+   import java.util.ArrayList;
+   import java.util.List;
+
+   /**
+   * 无限占用空间（浪费系统资源）
+   */
+   public class Main {
+      public static void main(String[] args) throws InterruptedException {
+         List<byte[]> bytes = new ArrayList<>();
+         while (true) {
+               bytes.add(new byte[10000]);
+         }
+      }
+   }
+   ```
+3. 读文件，信息泄露
+   ```java
+   import java.io.File;
+   import java.nio.file.Files;
+   import java.nio.file.Paths;
+   import java.util.List;
+
+   /**
+   * 读取服务器文件（文件信息泄露）
+   */
+   public class Main {
+      public static void main(String[] args) throws Exception {
+         String userDir = System.getProperty("user.dir");
+         String filePath = userDir + File.separator + "src/main/resources/application.yml";
+         List<String> allLines = Files.readAllLines(Paths.get(filePath));
+         System.out.println(String.join("\n", allLines));
+      }
+   }
+   ```
+4. 写文件，植入木马
+   ```java
+   ```
+5. 运行其他程序
+   ```java
+   ```
+6. 执行高危操作
+   ```java
+   ```
 
 #### 代码实现——Docker实现
 
@@ -1455,7 +1566,7 @@ java -cp . SimpleCompute 1 2
 4. String globalCodePathName = userDir + File.separator +"tmpCode";
    File.separator 分隔符——兼容windows的分隔符（为什么？不同OS的分隔符的区别？）
 5. UUID是干嘛的
-6. 魔法值？什么意思
+6. 魔法值？什么意思，见沙箱系统的 JavaNativeCodeSandbox
 7. 
 
 #### 异常处理方式：

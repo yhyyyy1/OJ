@@ -19,13 +19,13 @@
       >
         <a-input v-model="form.userAccount" placeholder="请输入账号" />
       </a-form-item>
-      <!--      <a-form-item-->
-      <!--        field="userName"-->
-      <!--        label="用户名"-->
-      <!--        :rules="[{ required: true, message: '用户名不能为空' }]"-->
-      <!--      >-->
-      <!--        <a-input v-model="form.userName" placeholder="请输入账号用户名" />-->
-      <!--      </a-form-item>-->
+      <a-form-item
+        field="userName"
+        label="用户名"
+        :rules="[{ required: true, message: '用户名不能为空' }]"
+      >
+        <a-input v-model="form.userName" placeholder="请输入账号用户名" />
+      </a-form-item>
       <a-form-item
         field="userPassword"
         tooltip="密码长度不能低于八位"
@@ -70,14 +70,18 @@ import { Message } from "@arco-design/web-vue";
 const router = useRouter();
 const store = useStore();
 const form = reactive<UserRegisterRequest>({
-  // userName: "",
+  userName: "",
   userAccount: "",
   userPassword: "",
   checkPassword: "",
 });
 
 const handleSubmit = async () => {
-  if (form.userAccount.length < 4 || form.userPassword.length < 8) {
+  if (
+    form.userName < 2 ||
+    form.userAccount.length < 4 ||
+    form.userPassword.length < 8
+  ) {
     return;
   }
   if (

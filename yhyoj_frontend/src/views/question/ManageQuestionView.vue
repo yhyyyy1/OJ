@@ -11,6 +11,7 @@
         total: total,
       }"
       @page-change="onPageChange"
+      id="manageQuestionTable"
     >
       <template #optional="{ record }">
         <a-space>
@@ -160,5 +161,8 @@ const columns = [
 
 <style scoped>
 #manageQuestionView {
+}
+
+#manageQuestionTable {
 }
 </style>

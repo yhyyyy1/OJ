@@ -1,10 +1,10 @@
 package com.yupi.yhyojcodesandbox.utils;
 
+import cn.hutool.core.util.StrUtil;
 import com.yupi.yhyojcodesandbox.model.ExecuteMessage;
+import org.springframework.util.StopWatch;
 
-import java.io.BufferedReader;
-import java.io.IOException;
-import java.io.InputStreamReader;
+import java.io.*;
 
 /**
  * 进程工具类
@@ -21,6 +21,9 @@ public class ProcessUtils {
         int exitValue = 0;
         ExecuteMessage executeMessage = new ExecuteMessage();
         try {
+            //计时，每个样例的开始时间
+            StopWatch stopWatch = new StopWatch();
+            stopWatch.start();
             exitValue = runProcess.waitFor();
             executeMessage.setExitValue(exitValue);
             if (exitValue == 0) {
@@ -56,10 +59,50 @@ public class ProcessUtils {
                 }
                 executeMessage.setErrorMessage(errorCompileOutputStringBuilder.toString());
             }
+            stopWatch.stop();
+            executeMessage.setTime(stopWatch.getLastTaskTimeMillis());
         } catch (InterruptedException ex) {
             throw new RuntimeException(ex);
         } catch (IOException e) {
             throw new RuntimeException(e);
+        }
+        return executeMessage;
+    }
+
+    /**
+     * 执行交互式进程并获取信息
+     *
+     * @param runProcess
+     * @return
+     */
+    public static ExecuteMessage runInterProcessAndGetMessage(Process runProcess, String opName, String args) {
+        int exitValue = 0;
+        ExecuteMessage executeMessage = new ExecuteMessage();
+        try {
+            //向控制台输入程序
+            OutputStream outputStream = runProcess.getOutputStream();
+
+            //交互式要先定义向控制台写
+            OutputStreamWriter outputStreamWriter = new OutputStreamWriter(outputStream);
+            String[] s = args.split(" ");
+            String join = StrUtil.join("\n", s) + "\n";
+            outputStreamWriter.write(join);
+            outputStreamWriter.flush();
+
+            //获取控制台信息(逐行获取输出信息)
+            BufferedReader bufferedReader = new BufferedReader(new InputStreamReader(runProcess.getInputStream()));
+            StringBuilder compileOutputStringBuilder = new StringBuilder();
+            String compileOutputLine;
+            while ((compileOutputLine = bufferedReader.readLine()) != null) {
+                compileOutputStringBuilder.append(compileOutputLine);
+            }
+            executeMessage.setMessage(compileOutputStringBuilder.toString());
+            //要记得资源的回收 ！！！！！！！！！！！！！！！！！！！！
+            outputStreamWriter.close();
+            outputStream.close();
+            runProcess.destroy();
+        } catch (Exception e) {
+            e.printStackTrace();
         }
         return executeMessage;
     }

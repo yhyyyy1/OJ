@@ -3,6 +3,7 @@
     <a-col flex="auto">
       <a-menu
         mode="horizontal"
+        :key="updateKey"
         :selected-keys="selectedKeys"
         :default-selected-keys="['1']"
         @menu-item-click="doMenuClick"
@@ -29,8 +30,11 @@
             ><img class="userImage" src="../assets/UserImage.jpg"
           /></a-button>
           <template #content>
-            <a-doption>
-              {{ store.state.user?.loginUser?.userName ?? "未登录" }}
+            <a-doption v-if="isLogin === 'yes'">
+              {{ store.state.user?.loginUser?.userName }}
+            </a-doption>
+            <a-doption v-if="isLogin === 'no'" @click="login">
+              去登录
             </a-doption>
             <a-doption @click="logout">退出登录</a-doption>
           </template>
@@ -43,7 +47,7 @@
 <script setup lang="ts">
 import { routes } from "@/router/routes";
 import { useRoute, useRouter } from "vue-router";
-import { computed, ref } from "vue";
+import { computed, ref, onMounted } from "vue";
 import { useStore } from "vuex";
 import checkAccess from "@/access/checkAccess";
 import AccessEnum from "@/access/accessEnum";
@@ -53,7 +57,8 @@ const route = useRoute();
 const router = useRouter();
 const store = useStore();
 const selectedKeys = ref([route.path]);
-
+let isLogin = ref("");
+let updateKey = ref(true);
 const visibleRoutes = computed(() => {
   return routes.filter((item, idex) => {
     if (item.meta?.hideInMenu) {
@@ -68,6 +73,13 @@ const visibleRoutes = computed(() => {
   });
 });
 
+onMounted(() => {
+  if (checkAccess(store.state.user.loginUser, AccessEnum.USER)) {
+    isLogin.value = "yes";
+  } else {
+    isLogin.value = "no";
+  }
+});
 // setTimeout(() => {
 //   store.dispatch("user/getLoginUser", {
 //     userName: "Yhy管理员",
@@ -78,9 +90,17 @@ const visibleRoutes = computed(() => {
 router.afterEach((to, from, failure) => {
   selectedKeys.value = [to.path];
 });
+
 const logout = () => {
   UserControllerService.userLogoutUsingPost();
+  router.push({ path: "/" });
+  updateKey.value = !updateKey.value;
 };
+
+const login = () => {
+  router.push({ path: "/user/login" });
+};
+
 const doMenuClick = (key: string) => {
   router.push({
     path: key,

@@ -2,16 +2,16 @@ package com.yupi.yhyojcodesandbox;
 
 import cn.hutool.core.io.FileUtil;
 import cn.hutool.core.io.resource.ResourceUtil;
+import cn.hutool.core.util.StrUtil;
 import com.yupi.yhyojcodesandbox.model.ExecuteCodeRequest;
 import com.yupi.yhyojcodesandbox.model.ExecuteCodeResponse;
 import com.yupi.yhyojcodesandbox.model.ExecuteMessage;
+import com.yupi.yhyojcodesandbox.model.JudgeInfo;
 import com.yupi.yhyojcodesandbox.utils.ProcessUtils;
 
-import java.io.BufferedReader;
 import java.io.File;
-import java.io.IOException;
-import java.io.InputStreamReader;
 import java.nio.charset.StandardCharsets;
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 import java.util.UUID;
@@ -27,7 +27,7 @@ public class JavaNativeCodeSandbox implements CodeSandbox {
         ExecuteCodeRequest executeCodeRequest = new ExecuteCodeRequest();
 
         //String code = ResourceUtil.readStr("testCode/simpleComputeArgs/Main.java", StandardCharsets.UTF_8);
-        String code = ResourceUtil.readStr("testCode/simpleCompute/Main.java", StandardCharsets.UTF_8);
+        String code = ResourceUtil.readStr("testCode/unsafeCode/ReadFileError.java", StandardCharsets.UTF_8);
         executeCodeRequest.setCode(code);
         executeCodeRequest.setLanguage("java");
         executeCodeRequest.setInputList(Arrays.asList("1 2", "1 3"));
@@ -61,28 +61,80 @@ public class JavaNativeCodeSandbox implements CodeSandbox {
             ExecuteMessage executeMessage = ProcessUtils.runProcessAndGetMessage(compileProcess, "编译");
             System.out.println(executeMessage);
         } catch (Exception e) {
-            throw new RuntimeException(e);
+            return getErrorResponse(e);
         }
 
         //3. 执行代码得到输出结果
+
+        List<ExecuteMessage> executeMessageList = new ArrayList<ExecuteMessage>();
         for (String inputArgs : inputList) {
             String runCmd = String.format("java -Dfile.encoding=utf-8 -cp %s Main %s", userCodeParentPath, inputArgs);
             try {
                 Process runProcess = Runtime.getRuntime().exec(runCmd);
+                //ExecuteMessage executeMessage = ProcessUtils.runInterProcessAndGetMessage(runProcess, "运行", inputArgs);
                 ExecuteMessage executeMessage = ProcessUtils.runProcessAndGetMessage(runProcess, "运行");
                 System.out.println(executeMessage);
-            } catch (IOException e) {
-                throw new RuntimeException(e);
+                executeMessageList.add(executeMessage);
+            } catch (Exception e) {
+                return getErrorResponse(e);
             }
         }
 
         //4. 收集整理输出结果
-        //
-        //5. 文件清理，释放空间
-        //
-        //6. 错误处理，提升程序健壮性
+        ExecuteCodeResponse executeCodeResponse = new ExecuteCodeResponse();
+        List<String> outputList = new ArrayList<String>();
 
+        //取最大值，用于判断是否超时
+        long maxtime = 0;
+        for (ExecuteMessage executeMessage : executeMessageList) {
+            String errorMessage = executeMessage.getErrorMessage();
+            if (StrUtil.isNotEmpty(errorMessage)) {
+                //有错误信息
+                executeCodeResponse.setMessage(errorMessage);
+                //3 表示用户提供的代码存在错误
+                executeCodeResponse.setStatus(3);
+                break;
+            }
+            outputList.add(executeMessage.getMessage());
+            Long time = executeMessage.getTime();
+            if (time != null) {
+                maxtime = Math.max(maxtime, time);
+            }
+        }
+        executeCodeResponse.setOutputsList(outputList);
 
-        return null;
+        if (outputList.size() == executeMessageList.size()) {
+            //正常完成
+            executeCodeResponse.setStatus(1);
+        }
+        JudgeInfo judgeInfo = new JudgeInfo();
+        judgeInfo.setTime(maxtime);
+        //获取内存占用很麻烦，此处不做实践
+        //judgeInfo.setMemory();
+        executeCodeResponse.setJudgeInfo(judgeInfo);
+
+        //5. 文件清理，释放空间（对应的tmpCode）
+        if (userCodeFile.getParentFile() != null) {
+            boolean del = FileUtil.del(userCodeParentPath);
+            System.out.println("删除" + (del ? "成功" : "失败"));
+        }
+
+        return executeCodeResponse;
+    }
+
+//6. 错误处理，提升程序健壮性
+    /**
+     * 获取错误响应
+     * @param e
+     * @return
+     */
+    private ExecuteCodeResponse getErrorResponse(Throwable e) {
+        ExecuteCodeResponse executeCodeResponse = new ExecuteCodeResponse();
+        executeCodeResponse.setOutputsList(new ArrayList<String>());
+        executeCodeResponse.setMessage(e.getMessage());
+        //2表示代码沙箱错误
+        executeCodeResponse.setStatus(2);
+        executeCodeResponse.setJudgeInfo(new JudgeInfo());
+        return executeCodeResponse;
     }
 }

@@ -16,6 +16,7 @@ import com.yupi.yhyoj.model.entity.User;
 import com.yupi.yhyoj.model.enums.QuestionSubmitLanguageEnum;
 import com.yupi.yhyoj.model.enums.QuestionSubmitStatusEnum;
 import com.yupi.yhyoj.model.vo.QuestionSubmitVO;
+import com.yupi.yhyoj.model.vo.UserVO;
 import com.yupi.yhyoj.service.QuestionService;
 import com.yupi.yhyoj.service.QuestionSubmitService;
 import com.yupi.yhyoj.service.UserService;
@@ -111,6 +112,7 @@ public class QuestionSubmitServiceImpl extends ServiceImpl<QuestionSubmitMapper,
         Integer status = questionSubmitQueryRequest.getStatus();
         Long questionId = questionSubmitQueryRequest.getQuestionId();
         Long userId = questionSubmitQueryRequest.getUserId();
+
         String sortField = questionSubmitQueryRequest.getSortField();
         String sortOrder = questionSubmitQueryRequest.getSortOrder();
 
@@ -135,6 +137,8 @@ public class QuestionSubmitServiceImpl extends ServiceImpl<QuestionSubmitMapper,
         if (userId != questionSubmit.getUserId() && !userService.isAdmin(loginUser)) {
             questionSubmitVO.setCode(null);
         }
+        UserVO userVO = userService.getUserVO(loginUser);
+        questionSubmitVO.setUserVO(userVO);
         return questionSubmitVO;
     }
 

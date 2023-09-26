@@ -1240,7 +1240,7 @@ java -cp . SimpleCompute 1 2
 核心实现思路：程序代替人工，用程序来操作命令，去编译执行代码
 核心依赖：Java进程类Process
 
-1. 把用户的代码保存为文件  
+1. **把用户的代码保存为文件**  
    引入Hutool工具类，提升操作文件效率
    ```xml
    <!-- https://hutool.cn/docs/index.html#/-->
@@ -1265,7 +1265,7 @@ java -cp . SimpleCompute 1 2
    String userCodePath = userCodeParentPath + File.separator + GLOBAL_JAVA_CLASS_NAME; //实际文件路径
    FileUtil.writeString(code, userCodePath, StandardCharsets.UTF_8);
    ```
-2. 编译代码文件，得到class文件  
+2. **编译代码文件，得到class文件**  
    2.1 java执行程序
    ```java
    String compileCmd = String.format("javac -encoding utf-8 %s", userCodeFile.getAbsoluteFile());
@@ -1330,8 +1330,7 @@ java -cp . SimpleCompute 1 2
          throw new RuntimeException(e);
       }
    ```
-3. 执行代码得到输出结果  
-   
+3. **执行代码得到输出结果**  
    3.1 发现上面的代码中，从终端中获取inputStream和errorStream比较频繁，所以要编写一个对应的工具类：(执行进程 并且获取输出)
    ```java
    package com.yupi.yhyojcodesandbox.utils;
@@ -1413,7 +1412,7 @@ java -cp . SimpleCompute 1 2
    }
    ```
    3.3 拓展——做出交互式的
-4. 收集整理输出结果  
+4. **收集整理输出结果**  
    使用StopWatch来获取时间
    ```java
       ExecuteCodeResponse executeCodeResponse = new ExecuteCodeResponse();
@@ -1447,14 +1446,14 @@ java -cp . SimpleCompute 1 2
       //        judgeInfo.setMemory();
       executeCodeResponse.setJudgeInfo(judgeInfo);
    ```
-5. 文件清理，释放空间  
+5. **文件清理，释放空间**  
    ```java
    if (userCodeFile.getParentFile() != null) {
       boolean del = FileUtil.del(userCodeParentPath);
       System.out.println("删除" + (del ? "成功" : "失败"));
    }
    ```
-6. 错误处理，提升程序健壮性  
+6. **错误处理，提升程序健壮性**  
    ```java
    /**
    * 获取错误响应
@@ -1474,7 +1473,7 @@ java -cp . SimpleCompute 1 2
 
 ##### 异常情况演示：（important）
 用户提交恶意代码怎么办
-1. 执行超时（时间上）  
+1. **执行超时**（时间上）  
    eg：程序会一直等待线程苏醒
    ```java
    /**
@@ -1488,7 +1487,8 @@ java -cp . SimpleCompute 1 2
        }
    }
    ```
-2. 占用内存（空间上）  
+   
+2. **占用内存**（空间上）  
    eg：程序会卡死（但是实际运行中，我们会发现，内存占用到达一定程度后，程序会自动报错：java.lang.OutOfMemoryError: Java heap space——这是一个 JVM 保护机制）
    ```java
    import java.util.ArrayList;
@@ -1506,7 +1506,8 @@ java -cp . SimpleCompute 1 2
       }
    }
    ```
-3. 读文件，信息泄露
+
+3. **读文件，信息泄露**（read）
    ```java
    import java.io.File;
    import java.nio.file.Files;
@@ -1525,16 +1526,203 @@ java -cp . SimpleCompute 1 2
       }
    }
    ```
-4. 写文件，植入木马
+
+4. **写文件，植入木马**（write）  
+   将 `java -version 2>&1` 当作java危险程序
    ```java
-   ```
-5. 运行其他程序
-   ```java
-   ```
-6. 执行高危操作
-   ```java
+   import java.io.File;
+   import java.nio.file.Files;
+   import java.nio.file.Paths;
+   import java.util.Arrays;
+
+   /**
+   * 向服务器写文件（植入危险程序）
+   */
+   public class Main {
+      public static void main(String[] args) throws Exception {
+         String userDir = System.getProperty("user.dir");
+         String filePath = userDir + File.separator + "src/main/resources/木马程序.bat";
+         String errorProgram = "java -version 2>&1";
+         Files.write(Paths.get(filePath), Arrays.asList(errorProgram));
+         System.out.println("写木马成功，✌");
+      }
+   }
    ```
 
+5. **运行其他程序**（写了木马后运行木马，甚至其他程序！！！）
+   ```java
+   import java.io.BufferedReader;
+   import java.io.File;
+   import java.io.InputStreamReader;
+
+   /**
+   * 向服务器写文件（植入危险程序）
+   */
+   public class Main {
+      public static void main(String[] args) throws Exception {
+         String userDir = System.getProperty("user.dir");
+         String filePath = userDir + File.separator + "src/main/resources/木马程序.bat";
+         Process process = Runtime.getRuntime().exec(filePath);
+         process.waitFor();
+         BufferedReader bufferedReader = new BufferedReader(new InputStreamReader(process.getInputStream()));
+         StringBuilder compileOutputStringBuilder = new StringBuilder();
+         String compileOutputLine;
+         while ((compileOutputLine = bufferedReader.readLine()) != null) {
+               System.out.println(compileOutputLine);
+         }
+
+         System.out.println("执行异常程序成功，✌");
+      }
+   }
+   ```
+
+6. **执行高危操作**  
+   比如：删除服务器所有文件 rm -rf； dir； rs 都是很危险的
+
+##### 异常情况解决方式：（very important）——JAVA程序安全控制
+1. **超时控制**  
+   中心思想：判断运行时间 —— new一个新线程（守护线程）用于监控执行程序的时间
+   ```java
+   private static final long TIME_OUT = 5000L;
+   //为避免超时，新建的守护线程
+   new Thread(()->{
+      try {
+         Thread.sleep(TIME_OUT);
+         runProcess.destroy();
+      } catch (InterruptedException e) {
+         throw new RuntimeException(e);
+      }
+   }).start();
+   ```
+
+2. **限制给用户程序分配的资源**  
+   不能让每个java进程的执行占用的 JVM最大堆内存空间都和系统的一致，实际上应该小一点，比如说256MB  
+   在启动Java时，指定JVM 参数：-Xmx256m（最大堆空间大小） -Xms(初始堆空间大小)  
+   -Xmx参数，所定义的JVM堆内存控制，不等同于系统实际占用的最大资源，可能会超出（倒也正常）
+   ```java
+   String runCmd = String.format("java -Xmx256m -Dfile.encoding=utf-8 -cp %s Main %s", userCodeParentPath, inputArgs);
+   ```
+
+3. **限制代码 —— 黑白名单**  
+   先定义一个黑白名单，比如哪些操作时禁止的，可以就是一个列表  
+   应用的是hutool的字典树工具，可以用更少的空间存储更多的敏感词汇  
+   缺点：无法遍历所有的黑名单；不同的编程语言中的关键词不同，人工成本很大  
+   ```java
+   private static final List<String> blacklist = Arrays.asList("Files","exec");
+   //校验代码（通过黑名单 balckList 应用字典树进行匹配）
+
+   //1.初始化
+   private static final WordTree WORD_TREE;
+
+   static {
+      //初始化字典树
+      WORD_TREE = new WordTree();
+      WORD_TREE.addWords(blacklist);
+   }
+
+   //2.自主实现
+   //wordTree 找到了匹配的关键词
+   FoundWord foundWord = WORD_TREE.matchWord(code);
+   if (foundWord != null) {
+      System.out.println("包含禁止词" + foundWord.getFoundWord());
+      return null;
+   }
+   ```
+4. **限制用户操作权限（文件、内存、CPU、网络、程序执行）**  
+   Java安全管理器——Security Manager，是JAVA提供的保护JVM、Java安全的机制，可以实现更严格的资源和操作限制  
+   只需要继承SecurityManager中对应的方法就可以了  
+   实际上SecurityManager应该应用到对应的子程序中（在本项目中，SecurityManager应该在沙箱执行的Java程序中，而不是沙箱本体中）
+   ```java
+   //1. 
+   package com.yupi.yhyojcodesandbox.security;
+   import java.security.Permission;
+
+   /**
+   * 默认安全管理器
+   */
+   public class DefaultSecurityManager extends SecurityManager {
+
+      @Override
+      public void checkPermission(Permission perm) {
+         System.out.println("默认不做任何权限限制");
+         System.out.println(perm);
+      }
+   }
+
+   //2. 在JavaNativeCodeSandbox，执行对应安全管理
+   System.setSecurityManager(new DefaultSecurityManager());
+   ```
+   对于较为复杂的情况，相当于在加白名单，通过得到报错的文件，添加对应的白名单
+   ```java
+   package com.yupi.yhyojcodesandbox.security;
+
+   import java.security.Permission;
+
+   /**
+   * 默认安全管理器
+   */
+   public class MySecurityManager extends SecurityManager {
+
+      //检查所有权限
+      @Override
+      public void checkPermission(Permission perm) {
+         //super.checkPermission(perm);
+         //throw new SecurityException("checkPermission 权限异常：" + perm);
+      }
+
+      //检测程序是否可以执行文件
+      @Override
+      public void checkExec(String cmd) {
+         throw new SecurityException("checkExec 权限异常：" + cmd);
+      }
+
+      //检测程序是否可以读文件
+      @Override
+      public void checkRead(String file) {
+         System.out.println(file);
+         //添加白名单
+         if (file.contains("D:\\Project\\OJ\\yhyoj-code-sandbox")) {
+               return;
+         }
+         throw new SecurityException("checkRead 权限异常：" + file);
+      }
+
+      //检测程序是否可以写文件
+      @Override
+      public void checkWrite(String file) {
+         throw new SecurityException("checkWrite 权限异常：" + file);
+      }
+
+      //检测程序是否可以删除文件
+      @Override
+      public void checkDelete(String file) {
+         throw new SecurityException("checkDelete 权限异常：" + file);
+      }
+
+      //检测程序是否可以连接网络
+      @Override
+      public void checkConnect(String host, int port) {
+         throw new SecurityException("checkConnect 权限异常：" + host + ": " + port);
+      }
+   }
+   ```
+   **实际使用过程**：  
+   i. 编写安全管理器  
+   ii. 编译安全管理器，去掉包名  
+   iii. 在运行java程序时，指定安全管理器的路径、名称
+   ```java
+   private static final String SECURITY_MANAGER_PATH = "D:\\Project\\OJ\\yhyoj-code-sandbox\\src\\main\\resources\\security";
+   private static final String SECURITY_MANAGER_CLASS_NAME = "MySecurityManager";
+
+   String runCmd = String.format("java -Xmx256m -Dfile.encoding=utf-8 -cp %s;%s -Djava.security.manager=%s Main %s", userCodeParentPath, SECURITY_MANAGER_PATH, SECURITY_MANAGER_CLASS_NAME, inputArgs);
+   ```
+   **缺点**：  
+   如果要做比较严格的权限限制，需要自己去判断哪些文件、包名需要允许读写，粒度太细了，难以精细化控制；  
+   本身就是Java代码，也有可能存在漏洞，还是程序上的限制，没到程序层面  
+   **优点**：  
+   权限控制很灵活，实现简单  
+5. **环境隔离**  
+   系统层面上，把用户程序封装到沙箱中，和宿主机（电脑/服务器）隔离开
 #### 代码实现——Docker实现
 
 

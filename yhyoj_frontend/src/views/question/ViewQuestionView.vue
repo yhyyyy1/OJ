@@ -68,15 +68,17 @@
           :handle-change="changeCode"
         />
         <a-divider size="0" />
-        <a-button type="primary" style="min-width: 200px" @click="doSubmit">
-          提交代码
-        </a-button>
-        <a-button
-          type="success"
-          style="min-width: 200px"
-          @click="toQuestionSubmitList"
-          >提交记录
-        </a-button>
+        <a-space>
+          <a-button type="primary" style="min-width: 200px" @click="doSubmit">
+            提交代码
+          </a-button>
+          <a-button
+            type="success"
+            style="min-width: 200px"
+            @click="toQuestionSubmitList"
+            >提交记录
+          </a-button>
+        </a-space>
       </a-col>
     </a-row>
   </div>

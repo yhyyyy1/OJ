@@ -24,27 +24,19 @@
           placeholder="请输入提交用户ID"
         />
       </a-form-item>
-      <a-form-item field="language" label="语言：">
-        <a-select
-          v-model="searchParams.language"
-          placeholder="Please select ..."
-          allow-clear
-        >
-          <a-option value="java">Java</a-option>
-          <a-option value="Cpp">Cpp</a-option>
-          <a-option value="Go">Go</a-option>
-        </a-select>
-      </a-form-item>
       <a-form-item field="status" label="状态：">
-        <a-select
-          v-model="searchParams.status"
-          placeholder="Please select ..."
-          allow-clear
-        >
+        <a-select v-model="searchParams.status" placeholder="ALL" allow-clear>
           <a-option value="0">等待中</a-option>
           <a-option value="1">判题中</a-option>
           <a-option value="2">成功</a-option>
           <a-option value="3">失败</a-option>
+        </a-select>
+      </a-form-item>
+      <a-form-item field="language" label="语言：">
+        <a-select v-model="searchParams.language" placeholder="ALL" allow-clear>
+          <a-option value="java">Java</a-option>
+          <a-option value="Cpp">Cpp</a-option>
+          <a-option value="Go">Go</a-option>
         </a-select>
       </a-form-item>
       <a-form-item>

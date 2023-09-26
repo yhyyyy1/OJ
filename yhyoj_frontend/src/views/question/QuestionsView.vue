@@ -1,6 +1,9 @@
 <template>
   <div id="questionsView">
     <a-form :model="searchParams" layout="inline">
+      <a-form-item field="id" label="题目编号" style="min-width: 280px">
+        <a-input v-model="searchParams.id" placeholder="请输入题目编号" />
+      </a-form-item>
       <a-form-item field="title" label="题目名称" style="min-width: 280px">
         <a-input v-model="searchParams.title" placeholder="请输入题目名称" />
       </a-form-item>
@@ -72,6 +75,7 @@ const total = ref(0);
  * 控制分页显示大小 —— 一页有几个元素 & 当前是第几页
  */
 const searchParams = ref<QuestionQueryRequest>({
+  id: undefined,
   title: "",
   tags: [],
   pageSize: 8,

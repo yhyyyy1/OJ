@@ -11,6 +11,7 @@ import ViewQuestionView from "@/views/question/ViewQuestionView.vue";
 import QuestionSubmitView from "@/views/question/QuestionSubmitView.vue";
 import UserInfoView from "@/views/UserInfoView.vue";
 import QuestionSubmitResultView from "@/views/question/QuestionSubmitResultView.vue";
+import UserUpdateView from "@/views/user/UserUpdateView.vue";
 
 export const routes: Array<RouteRecordRaw> = [
   {
@@ -27,6 +28,11 @@ export const routes: Array<RouteRecordRaw> = [
         path: "/user/register",
         name: "用户注册",
         component: UserRegisterView,
+      },
+      {
+        path: "/user/update",
+        name: "用户数据更新",
+        component: UserUpdateView,
       },
     ],
     meta: {

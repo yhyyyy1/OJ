@@ -34,7 +34,7 @@ public class ProcessUtils {
                 StringBuilder compileOutputStringBuilder = new StringBuilder();
                 String compileOutputLine;
                 while ((compileOutputLine = bufferedReader.readLine()) != null) {
-                    compileOutputStringBuilder.append(compileOutputLine);
+                    compileOutputStringBuilder.append(compileOutputLine).append("\n");
                 }
                 executeMessage.setMessage(compileOutputStringBuilder.toString());
             } else {
@@ -46,7 +46,7 @@ public class ProcessUtils {
                 StringBuilder compileOutputStringBuilder = new StringBuilder();
                 String compileOutputLine;
                 while ((compileOutputLine = bufferedReader.readLine()) != null) {
-                    compileOutputStringBuilder.append(compileOutputLine);
+                    compileOutputStringBuilder.append(compileOutputLine).append("\n");
                 }
                 executeMessage.setMessage(compileOutputStringBuilder.toString());
 
@@ -55,7 +55,7 @@ public class ProcessUtils {
                 StringBuilder errorCompileOutputStringBuilder = new StringBuilder();
                 String errorCompileOutputLine;
                 while ((errorCompileOutputLine = errorBufferedReader.readLine()) != null) {
-                    errorCompileOutputStringBuilder.append(errorCompileOutputLine);
+                    errorCompileOutputStringBuilder.append(errorCompileOutputLine).append("\n");
                 }
                 executeMessage.setErrorMessage(errorCompileOutputStringBuilder.toString());
             }

@@ -47,7 +47,7 @@ export const routes: Array<RouteRecordRaw> = [
     },
   },
   {
-    path: "/getSubmitList/question/:id",
+    path: `/getSubmitList/question/:questionId`,
     name: "某个题目题目提交记录",
     component: QuestionSubmitView,
     meta: {

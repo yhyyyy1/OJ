@@ -12,6 +12,7 @@
     "@bytemd/plugin-highlight": "^1.21.0",
     "@bytemd/vue-next": "^1.21.0",
     "axios": "^1.5.0",
+    "bignumber.js": "^9.1.2",
     "core-js": "^3.8.3",
     "moment": "^2.29.4",
     "monaco-editor": "^0.43.0",

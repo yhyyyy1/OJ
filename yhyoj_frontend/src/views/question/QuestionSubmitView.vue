@@ -8,6 +8,12 @@
         style="min-width: 240px"
       >
         <a-input
+          v-if="haveQuestionId"
+          v-model="searchParams.questionId"
+          placeholder="当前查询题目编号"
+        />
+        <a-input
+          v-if="!haveQuestionId"
           v-model="searchParams.questionId"
           placeholder="请输入题目编号"
         />
@@ -62,7 +68,7 @@
         {{ record.userVO.userName }}
       </template>
       <template #questionId="{ record }">
-        <div type="primary" @click="toQuestionPage(record.questionId)">
+        <div style="color: blue" @click="toQuestionPage(record.questionId)">
           {{ record.questionId }}
         </div>
       </template>
@@ -95,14 +101,16 @@ import {
   QuestionSubmitQueryRequest,
 } from "../../../generated";
 import message from "@arco-design/web-vue/es/message";
-import { useRouter } from "vue-router";
+import { useRoute, useRouter } from "vue-router";
 import moment from "moment";
+import BigNumber from "bignumber.js";
 
+const route = useRoute();
 const router = useRouter();
 const tableRef = ref();
 const dataList = ref([]);
 const total = ref(0);
-const userName = ref();
+const haveQuestionId = ref(false);
 /**
  * 控制分页显示大小 —— 一页有几个元素 & 当前是第几页
  */
@@ -136,16 +144,22 @@ const loadData = async () => {
  * 当页面初始化的时候，执行loadData 加载数据
  */
 onMounted(() => {
-  // const id = route.query.id;
-  // if (!id) {
-  //   haveUser.value = false;
-  // } else {
-  //   haveUser.value = true;
-  //   searchParams.value.questionId = id;
-  // }
+  setQuestionId();
   loadData();
 });
-
+const setQuestionId = () => {
+  console.log(route.params.questionId);
+  const questionId = Number(route.params.questionId);
+  console.log(questionId);
+  if (!questionId) {
+    haveQuestionId.value = false;
+    return;
+  } else {
+    haveQuestionId.value = true;
+    searchParams.value.questionId = questionId;
+    doSubmit();
+  }
+};
 /**
  * 监听watchEffect中包含的函数的参数的改变，一旦有所变化，就会重新执行这个函数
  * 此处就是监听searchParams的变化
@@ -219,7 +233,7 @@ const columns = [
     // user
   },
   {
-    title: "题目编号（点击题号查看题目）",
+    title: "题目编号",
     slotName: "questionId",
     // questionSubmit
     // todo

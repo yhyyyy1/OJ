@@ -45,9 +45,6 @@
         <a-button type="primary" @click="toQuestionPage(record)"
           >做题
         </a-button>
-        <a-button type="success" @click="toQuestionSubmitList(record)"
-          >提交记录
-        </a-button>
       </template>
     </a-table>
   </div>
@@ -125,15 +122,6 @@ const toQuestionPage = (question: Question) => {
   });
 };
 
-/**
- * 跳转到提交记录页面
- * @param question
- */
-const toQuestionSubmitList = (question: Question) => {
-  router.push({
-    path: `/getSubmitList/question/${question.id}`,
-  });
-};
 /**
  * 搜索题目
  */

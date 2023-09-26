@@ -105,7 +105,6 @@ const login = () => {
 };
 
 const toUserInfo = () => {
-  console.log(store.state.user.loginUser.userId);
   router.push({
     path: `/Info/${store.state.user.loginUser.id}`,
   });

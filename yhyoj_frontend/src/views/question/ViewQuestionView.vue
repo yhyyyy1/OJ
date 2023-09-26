@@ -1,5 +1,6 @@
 <template>
   <div id="viewQuestionView">
+    <h2>题目{{ questionId }}</h2>
     <a-row :gutter="[24, 24]">
       <a-col :md="12" :xs="24">
         <a-tabs default-active-key="question">
@@ -70,6 +71,12 @@
         <a-button type="primary" style="min-width: 200px" @click="doSubmit">
           提交代码
         </a-button>
+        <a-button
+          type="success"
+          style="min-width: 200px"
+          @click="toQuestionSubmitList"
+          >提交记录
+        </a-button>
       </a-col>
     </a-row>
   </div>
@@ -86,6 +93,9 @@ import {
 import message from "@arco-design/web-vue/es/message";
 import CodeEditor from "@/components/CodeEditor.vue";
 import MdViewer from "@/components/MdViewer.vue";
+import { useRouter } from "vue-router";
+
+const router = useRouter();
 
 interface Props {
   id: string;
@@ -96,13 +106,14 @@ const props = withDefaults(defineProps<Props>(), {
 });
 
 const question = ref<QuestionVO>();
-
+const questionId = ref();
 const loadData = async () => {
   const res = await QuestionControllerService.getQuestionVoByIdUsingGet(
     props.id as any
   );
   if (res.code === 0) {
     question.value = res.data;
+    questionId.value = res.data?.id;
   } else {
     message.error("加载失败，" + res.message);
   }
@@ -132,6 +143,15 @@ const doSubmit = async () => {
   }
 };
 
+/**
+ * 跳转到提交记录页面
+ * @param question
+ */
+const toQuestionSubmitList = () => {
+  router.push({
+    path: `/getSubmitList/question/${question.value?.id}`,
+  });
+};
 /**
  * 页面加载时，请求数据
  */

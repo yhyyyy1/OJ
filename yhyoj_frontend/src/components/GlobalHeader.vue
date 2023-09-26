@@ -3,7 +3,6 @@
     <a-col flex="auto">
       <a-menu
         mode="horizontal"
-        :key="updateKey"
         :selected-keys="selectedKeys"
         :default-selected-keys="['1']"
         @menu-item-click="doMenuClick"
@@ -30,7 +29,7 @@
             ><img class="userImage" src="../assets/UserImage.jpg"
           /></a-button>
           <template #content>
-            <a-doption v-if="isLogin === 'yes'">
+            <a-doption v-if="isLogin === 'yes'" @click="toUserInfo">
               {{ store.state.user?.loginUser?.userName }}
             </a-doption>
             <a-doption v-if="isLogin === 'no'" @click="login">
@@ -57,6 +56,7 @@ const route = useRoute();
 const router = useRouter();
 const store = useStore();
 const selectedKeys = ref([route.path]);
+
 let isLogin = ref("");
 let updateKey = ref(true);
 const visibleRoutes = computed(() => {
@@ -94,20 +94,28 @@ router.afterEach((to, from, failure) => {
 const logout = () => {
   UserControllerService.userLogoutUsingPost();
   router.push({ path: "/" });
-  updateKey.value = !updateKey.value;
+  isLogin.value = "no";
+  store.dispatch("user/getLoginUser", {
+    userRole: AccessEnum.NOT_LOGIN,
+  });
 };
 
 const login = () => {
   router.push({ path: "/user/login" });
 };
 
+const toUserInfo = () => {
+  console.log(store.state.user.loginUser.userId);
+  router.push({
+    path: `/Info/${store.state.user.loginUser.id}`,
+  });
+};
 const doMenuClick = (key: string) => {
   router.push({
     path: key,
   });
 };
 </script>
-.
 <!-- Add "scoped" attribute to limit CSS to this component only -->
 <style scoped>
 .title-bar {

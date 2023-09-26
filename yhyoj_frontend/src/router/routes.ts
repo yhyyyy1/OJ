@@ -8,8 +8,9 @@ import AddQuestionView from "@/views/question/AddQuestionView.vue";
 import ManageQuestionView from "@/views/question/ManageQuestionView.vue";
 import QuestionsView from "@/views/question/QuestionsView.vue";
 import ViewQuestionView from "@/views/question/ViewQuestionView.vue";
-import QuestionSubmitView from "@/views/QuestionSubmitView.vue";
+import QuestionSubmitView from "@/views/question/QuestionSubmitView.vue";
 import UserInfoView from "@/views/UserInfoView.vue";
+import QuestionSubmitResultView from "@/views/question/QuestionSubmitResultView.vue";
 
 export const routes: Array<RouteRecordRaw> = [
   {
@@ -38,7 +39,7 @@ export const routes: Array<RouteRecordRaw> = [
     component: QuestionsView,
   },
   {
-    path: "/questionSubmit",
+    path: "/submitList/question",
     name: "题目提交记录",
     component: QuestionSubmitView,
     meta: {
@@ -46,7 +47,16 @@ export const routes: Array<RouteRecordRaw> = [
     },
   },
   {
-    path: "/Info",
+    path: "/getSubmitList/question/:id",
+    name: "某个题目题目提交记录",
+    component: QuestionSubmitView,
+    meta: {
+      access: AccessEnum.USER,
+      hideInMenu: true,
+    },
+  },
+  {
+    path: "/Info/:id",
     name: "用户信息",
     component: UserInfoView,
     meta: {
@@ -64,7 +74,16 @@ export const routes: Array<RouteRecordRaw> = [
       hideInMenu: true,
     },
   },
-
+  {
+    path: "/SubmitView/question/:id",
+    name: "做题提交情况",
+    component: QuestionSubmitResultView,
+    props: true,
+    meta: {
+      access: AccessEnum.USER,
+      hideInMenu: true,
+    },
+  },
   {
     path: "/add/question",
     name: "创建题目",

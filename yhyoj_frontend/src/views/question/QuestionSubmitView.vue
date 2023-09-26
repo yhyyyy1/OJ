@@ -61,6 +61,11 @@
       <template #userName="{ record }">
         {{ record.userVO.userName }}
       </template>
+      <template #questionId="{ record }">
+        <div type="primary" @click="toQuestionPage(record.questionId)">
+          {{ record.questionId }}
+        </div>
+      </template>
       <template #codeLength="{ record }">
         {{ getByteCount(record.code) }} Bytes
       </template>
@@ -72,29 +77,28 @@
         {{ moment(record.createTime).format("YYYY-MM-DD HH:mm:ss") }}
       </template>
       <template #status="{ record }">
-        <a-tag v-if="record.status === 0" color="orange">等待中</a-tag>
-        <a-tag v-if="record.status === 1" color="blue">判题中</a-tag>
-        <a-tag v-if="record.status === 2" color="green">成功</a-tag>
-        <a-tag v-if="record.status === 3" color="red">失败</a-tag>
+        <div @click="toQuestionSubmitResult(record.questionId)">
+          <a-tag v-if="record.status === 0" color="orange">等待中</a-tag>
+          <a-tag v-if="record.status === 1" color="blue">判题中</a-tag>
+          <a-tag v-if="record.status === 2" color="green">成功</a-tag>
+          <a-tag v-if="record.status === 3" color="red">失败</a-tag>
+        </div>
       </template>
     </a-table>
   </div>
 </template>
 
 <script setup lang="ts">
-import { computed, onMounted, ref, watchEffect } from "vue";
+import { onMounted, ref, watchEffect } from "vue";
 import {
-  Question,
   QuestionSubmitControllerService,
   QuestionSubmitQueryRequest,
-  UserControllerService,
-} from "../../generated";
+} from "../../../generated";
 import message from "@arco-design/web-vue/es/message";
 import { useRouter } from "vue-router";
 import moment from "moment";
 
 const router = useRouter();
-const show = ref(true);
 const tableRef = ref();
 const dataList = ref([]);
 const total = ref(0);
@@ -107,7 +111,7 @@ const searchParams = ref<QuestionSubmitQueryRequest>({
   userId: undefined,
   status: undefined,
   language: "",
-  pageSize: 8,
+  pageSize: 10,
   current: 1,
 });
 
@@ -132,8 +136,16 @@ const loadData = async () => {
  * 当页面初始化的时候，执行loadData 加载数据
  */
 onMounted(() => {
+  // const id = route.query.id;
+  // if (!id) {
+  //   haveUser.value = false;
+  // } else {
+  //   haveUser.value = true;
+  //   searchParams.value.questionId = id;
+  // }
   loadData();
 });
+
 /**
  * 监听watchEffect中包含的函数的参数的改变，一旦有所变化，就会重新执行这个函数
  * 此处就是监听searchParams的变化
@@ -147,15 +159,27 @@ const onPageChange = (page: number) => {
     current: page,
   };
 };
+
 /**
  * 跳转到做题页面
- * @param question
+ * @param questionId
  */
-const toQuestionPage = (question: Question) => {
+const toQuestionPage = (questionId: number) => {
   router.push({
-    path: `/view/question/${question.id}`,
+    path: `/view/question/${questionId}`,
   });
 };
+
+/**
+ * 跳转到题目提交详情页面
+ * @param questionId
+ */
+const toQuestionSubmitResult = (questionId: number) => {
+  router.push({
+    path: `/SubmitView/question/${questionId}`,
+  });
+};
+
 /**
  * 搜索题目
  */
@@ -168,6 +192,10 @@ const doSubmit = () => {
   loadData();
 };
 
+/**
+ * 获取代码的Byte长度
+ * @param code
+ */
 const getByteCount = (code: string) => {
   const encoder = new TextEncoder();
   const encodedArray = encoder.encode(code);
@@ -191,8 +219,8 @@ const columns = [
     // user
   },
   {
-    title: "题目编号",
-    dataIndex: "questionId",
+    title: "题目编号（点击题号查看题目）",
+    slotName: "questionId",
     // questionSubmit
     // todo
   },
@@ -230,7 +258,7 @@ const columns = [
 
 <style scoped>
 #questionSubmitView {
-  max-width: 1280px;
+  max-width: 1440px;
   margin: 0 auto;
 }
 </style>

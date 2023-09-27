@@ -1196,10 +1196,10 @@ public class CodeSandboxFactory {
    出现了循环依赖QuestionSubmitService 和 JudgeService互相调用了  
    处理：加@lazy注解？lazyload？
 
-### 代码沙箱实现！！！！
+## 代码沙箱实现！！！！
 代码沙箱的作用——只负责接收值，运行代码，得出结果，不关注是否正确  
 记得之前有提到过，要通过api调用的方式去连接代码沙箱，所以需要新建一个Spring Boot Web项目（提供一个能执行代码、操作代码沙箱的接口）
-##### 项目初始化
+#### 项目初始化
 Maven、Java8、Springboot2.7  
 1. 编写启动配置
       ```yaml
@@ -1221,7 +1221,7 @@ Maven、Java8、Springboot2.7
       }
    }
    ```
-#### 代码实现——Java原生实现
+### 代码实现——Java原生实现
 代码沙箱需要：接收代码 => 编译代码（javac）=> 执行代码（java）  
 
 ```
@@ -1236,7 +1236,7 @@ java -cp . SimpleCompute 1 2
 
 限定用户输入的代码类名为Main——将文件名设置为Main（统一类名）
 
-##### 核心流程实现：
+#### 核心流程实现：
 核心实现思路：程序代替人工，用程序来操作命令，去编译执行代码
 核心依赖：Java进程类Process
 
@@ -1471,7 +1471,7 @@ java -cp . SimpleCompute 1 2
    }
    ```
 
-##### 异常情况演示：（important）
+#### 异常情况演示：（important）
 用户提交恶意代码怎么办
 1. **执行超时**（时间上）  
    eg：程序会一直等待线程苏醒
@@ -1579,7 +1579,7 @@ java -cp . SimpleCompute 1 2
 6. **执行高危操作**  
    比如：删除服务器所有文件 rm -rf； dir； rs 都是很危险的
 
-##### 异常情况解决方式：（very important）——JAVA程序安全控制
+#### 异常情况解决方式：（very important）——JAVA程序安全控制
 1. **超时控制**  
    中心思想：判断运行时间 —— new一个新线程（守护线程）用于监控执行程序的时间
    ```java
@@ -1723,13 +1723,82 @@ java -cp . SimpleCompute 1 2
    权限控制很灵活，实现简单  
 5. **环境隔离**  
    系统层面上，把用户程序封装到沙箱中，和宿主机（电脑/服务器）隔离开
-#### 代码实现——Docker实现
+### 代码实现——Docker实现
+为什么要用Docker容器技术呢  
+* 为了提升系统的安全性，使用Docker把不同的程序和宿主机隔离，使得某个程序（应用）的执行不会影响到系统本身  
+
+#### Docker的基本用法
+镜像: 用来创建容器的安装包，可以理解为给电脑安装操作系统的系统镜像  
+容器: 通过镜像来创建的一套运行环境，一个容器里可以运行多个程序，可以理解为一个电脑实例  
+Dockerfile: 制作镜像的文件，可以理解为制作镜像的一个清单  
+镜像仓库:存放镜像的仓库，用户可以从仓库下载现成的镜像，也可以把做好的镜像放到仓库里  
+推荐使用 docker 官方的镜像仓库: https://hub.docker.com/search?q=nginx
+#### Docker实现核心
+<img src="doc/docker.png" width="50%">
+
+看图理解  
+1. Docker 运行在 Linux 内核上
+2. CGroups: 实现了容器的资源隔离，底层是 Linux Cgroup 命令，能够控制进程使用的资源
+3. Network 网络: 实现容器的网络隔离，docker 容器内部的网络互不影响
+4. Namespaces 命名空间: 可以把进程隔离在不同的命名空间下，每个容器他都可以有自己的命名空间，不同的命名空间下的进程互不影响。
+5. storage 存储空间: 容器内的文件是相互隔离的，也可以去使用宿主机的文件
+
+#### 命令行的用法  
+`[OPTIONS]` 选项；`IMAGE`镜像；`[COMMAND]`要执行的命令；`[ARG...]`参数
+1. 查看命令用法  
+   ```
+   docker --help
+   ```
+   查看具体子命令的方法
+   ```
+   docker run(具体子命令) --help
+   ```
+2. 从远程仓库拉取镜像  
+   ```
+   docker pull [OPTIONS] NAME[:TAG|@DIGEST]
+   //实例
+   sudo docker pull hello-world
+   ```
+3. 根据镜像创建容器实例  
+   ```
+   docker create [OPTIONS] IMAGE [COMMAND] [ARG...]
+   ```
+   启动实例，得到容器实例Id —— containerld:
+   ```
+   sudo docker create hello-world
+   //得到68998a9e29fbe990f36a54f1366c48079c82a30eb06cbe082f6fe89c07fc449f
+   //就是containerld
+   ```
+4. 查看容器状态  
+   ```
+   sudo docker ps -a
+   ```
+5. 启动容器  
+   ```
+   docker start [OPTIONS] CONTIANER（容器名称 or Id）
+   ```
+6. 查看日志   
+   ```
+   docker logs[OPTIONS] CONTAINER（容器名称 or Id）
+   ```
+7. 删除容器实例  
+   ```
+   docker rm[OPTIONS] CONTAINER（容器名称 or Id）
+   ```
+8. 删除镜像  
+   ```
+   sudo docker rmi IMAGE(镜像名称)
+   ```
+9. 其他: 构建镜像 (build) 、推送像 (push) 、行容器 (run) 、执行容器命令 (exec) 等
+#### Java操作Docker  
 
 
 
+#### Docker沙箱的安全性
 
 
-#### Question：
+
+### Question：
 
 1. vue中父子组件之间传值 & 相互管理 的操作 interface Props {xxxx} & const props = withDefaults
 2. 实体类中添加这些东西是干嘛的呢。。

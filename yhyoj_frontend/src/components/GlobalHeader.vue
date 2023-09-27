@@ -35,9 +35,7 @@
             <a-doption v-if="isLogin === 'no'" @click="login">
               去登录
             </a-doption>
-            <a-doption @click="updateUser">
-              更改登录信息
-            </a-doption>
+            <a-doption @click="updateUser"> 更改登录信息</a-doption>
             <a-doption @click="logout">退出登录</a-doption>
           </template>
         </a-dropdown>
@@ -109,7 +107,7 @@ const login = () => {
 
 const updateUser = () => {
   router.push({ path: "/user/update" });
-}
+};
 const toUserInfo = () => {
   router.push({
     path: `/Info/${store.state.user.loginUser.id}`,

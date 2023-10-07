@@ -1723,7 +1723,7 @@ java -cp . SimpleCompute 1 2
    权限控制很灵活，实现简单  
 5. **环境隔离**  
    系统层面上，把用户程序封装到沙箱中，和宿主机（电脑/服务器）隔离开
-### 代码实现——Docker实现
+### 代码实现——Docker实现（前期准备）
 为什么要用Docker容器技术呢  
 * 为了提升系统的安全性，使用Docker把不同的程序和宿主机隔离，使得某个程序（应用）的执行不会影响到系统本身  
 
@@ -1743,7 +1743,7 @@ Dockerfile: 制作镜像的文件，可以理解为制作镜像的一个清单
 4. Namespaces 命名空间: 可以把进程隔离在不同的命名空间下，每个容器他都可以有自己的命名空间，不同的命名空间下的进程互不影响。
 5. storage 存储空间: 容器内的文件是相互隔离的，也可以去使用宿主机的文件
 
-#### 命令行的用法  
+#### 命令行操作docker  
 `[OPTIONS]` 选项；`IMAGE`镜像；`[COMMAND]`要执行的命令；`[ARG...]`参数
 1. 查看命令用法  
    ```
@@ -1771,7 +1771,7 @@ Dockerfile: 制作镜像的文件，可以理解为制作镜像的一个清单
    ```
 4. 查看容器状态  
    ```
-   sudo docker ps -a
+   docker ps -a
    ```
 5. 启动容器  
    ```
@@ -1787,16 +1787,124 @@ Dockerfile: 制作镜像的文件，可以理解为制作镜像的一个清单
    ```
 8. 删除镜像  
    ```
-   sudo docker rmi IMAGE(镜像名称)
+   docker rmi IMAGE(镜像名称)
+   sudo docker rmi hello-world -f（强制删除hello-world示例）
    ```
 9. 其他: 构建镜像 (build) 、推送像 (push) 、行容器 (run) 、执行容器命令 (exec) 等
 #### Java操作Docker  
+Docker-Java：https://github.com/docker-java/docker-java    
+官方指导文档：https://github.com/docker-java/docker-java/blob/main/docs/getting_started.md  
 
+使用Docker-Java库 先引入依赖到 yhyoj-code-sandbox 的pom.xml中  
+```xml
+<!-- https://mvnrepository.com/artifact/com.github.docker-java/docker-java -->
+<dependency>
+   <groupId>com.github.docker-java</groupId>
+   <artifactId>docker-java</artifactId>
+   <version>3.3.0</version>
+</dependency>
+<!-- https://mvnrepository.com/artifact/com.github.docker-java/docker-java-transport-httpclient5 -->
+<dependency>
+   <groupId>com.github.docker-java</groupId>
+   <artifactId>docker-java-transport-httpclient5</artifactId>
+   <version>3.3.0</version>
+</dependency>
+```
+
+DockerClientConfig: 用于定义初始化 DockerClient 的配置(类比 MySQL 的连接、线程数配置)  
+DockerHttpClient: 用于向 Docker 守护进程(操作 Docker 的接口) 发送请求的客户端，低层封装(不推荐使用)，你要自己构建请求参数 (简单地理解成JDBC)  
+DockerClient (推荐): 才是真正和 Docker 守护进程交互的、最方便的 SDK，高层封装，对DockerHttpClient 再进行了一层封装 (理解成 MyBatis) ，提供了现成的增删改查
+
+#### Linux Docker 远程开发
+```java
+DockerClient dockerClient = DockerClientBuilder.getInstance().build();
+```
+建立Docker客户端，这是Docker-Java用到的最关键用法
+
+1. 拉取镜像：  
+   要注意文件的权限 & 重启虚拟机及其相关程序
+   ```java
+   String image = "nginx:latest";
+   PullImageCmd pullImageCmd = dockerClient.pullImageCmd(image);
+   //回调？
+   PullImageResultCallback pullImageResultCallback = new PullImageResultCallback() {
+      @Override
+      public void onNext(PullResponseItem item) {
+            System.out.println("下载镜像" + item.getStatus());
+            super.onNext(item);
+      }
+   };
+   pullImageCmd
+            .exec(pullImageResultCallback)
+            .awaitCompletion();
+   System.out.println("下载完成");
+   ```
+2. 创建容器  
+   ```java
+   CreateContainerCmd createContainerCmd = dockerClient.createContainerCmd(image);
+   CreateContainerResponse createConfigResponse = createContainerCmd
+            .withCmd("echo","hello Docker")
+            .exec();
+   System.out.println(createConfigResponse);
+   ```
+3. 查看容器状态  
+   ```java
+   ListContainersCmd listContainersCmd = dockerClient.listContainersCmd();
+   List<Container> containerList = listContainersCmd
+            .withShowAll(true)
+            .exec();
+   for(Container container : containerList){
+      System.out.println(container);
+   }
+   ```
+4. 启动容器  
+   ```java
+   dockerClient.startContainerCmd(containerId).exec();
+   ```
+5. 查看日志  
+   ```java
+   LogContainerResultCallback logContainerResultCallback = new LogContainerResultCallback(){
+            @Override
+      public void onNext(Frame item) {
+            System.out.println("日志：" + new String(item.getPayload()));
+            super.onNext(item);
+      }
+   };
+
+   dockerClient.logContainerCmd(containerId)
+            .withStdOut(true)
+            .withStdErr(true)
+            .exec(logContainerResultCallback)
+            .awaitCompletion();
+   ```
+6. 删除容器  
+   ```java
+   dockerClient.removeContainerCmd(containerId).withForce(true).exec();
+   ```
+7. 删除镜像  
+   ```java
+   dockerClient.removeImageCmd(image).exec();
+   ```
+
+### 代码实现——Docker实现（真正实现）！！！！！！！！！
+实现流程：docker 负责运行java程序，并且得到结果
+1. 把用户的代码保存为文件  
+2. 编译代码文件，得到class文件  
+3. **把编译好的文件上传到容器环境内** new  
+   3.1 自定义容器  
+   3.1.1 在已有镜像的基础上再扩展：eg 拉取现成的Java环境 (包含Jdk)，再把编译后的文件复制到容器中 ✔  
+   3.1.2 完全自定义容器  
+
+   3.2 每个
+4. **在容器中执行代码，得到输出结果** new  
+5. 执行代码得到输出结果  
+6. 文件清理，释放空间  
+7. 错误处理，提升程序健壮性  
+
+设计模式——模板方法，定义同一套实现流程，让不同的子类去负责不同流程中的具体实现。执行步骤一样每个步骤的实现方式不一样。
 
 
 #### Docker沙箱的安全性
-
-
 
 ### Question：
 

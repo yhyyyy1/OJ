@@ -1791,6 +1791,10 @@ Dockerfile: 制作镜像的文件，可以理解为制作镜像的一个清单
    sudo docker rmi hello-world -f（强制删除hello-world示例）
    ```
 9. 其他: 构建镜像 (build) 、推送像 (push) 、行容器 (run) 、执行容器命令 (exec) 等
+   ```
+   操作已启动容器
+   docker exec containerId
+   ```
 #### Java操作Docker  
 Docker-Java：https://github.com/docker-java/docker-java    
 官方指导文档：https://github.com/docker-java/docker-java/blob/main/docs/getting_started.md  
@@ -1830,29 +1834,29 @@ DockerClient dockerClient = DockerClientBuilder.getInstance().build();
    PullImageResultCallback pullImageResultCallback = new PullImageResultCallback() {
       @Override
       public void onNext(PullResponseItem item) {
-            System.out.println("下载镜像" + item.getStatus());
-            super.onNext(item);
+         System.out.println("下载镜像" + item.getStatus());
+         super.onNext(item);
       }
    };
    pullImageCmd
-            .exec(pullImageResultCallback)
-            .awaitCompletion();
+         .exec(pullImageResultCallback)
+         .awaitCompletion();
    System.out.println("下载完成");
    ```
 2. 创建容器  
    ```java
    CreateContainerCmd createContainerCmd = dockerClient.createContainerCmd(image);
    CreateContainerResponse createConfigResponse = createContainerCmd
-            .withCmd("echo","hello Docker")
-            .exec();
+         .withCmd("echo","hello Docker")
+         .exec();
    System.out.println(createConfigResponse);
    ```
 3. 查看容器状态  
    ```java
    ListContainersCmd listContainersCmd = dockerClient.listContainersCmd();
    List<Container> containerList = listContainersCmd
-            .withShowAll(true)
-            .exec();
+         .withShowAll(true)
+         .exec();
    for(Container container : containerList){
       System.out.println(container);
    }
@@ -1864,18 +1868,18 @@ DockerClient dockerClient = DockerClientBuilder.getInstance().build();
 5. 查看日志  
    ```java
    LogContainerResultCallback logContainerResultCallback = new LogContainerResultCallback(){
-            @Override
+      @Override
       public void onNext(Frame item) {
-            System.out.println("日志：" + new String(item.getPayload()));
-            super.onNext(item);
+         System.out.println("日志：" + new String(item.getPayload()));
+         super.onNext(item);
       }
    };
 
    dockerClient.logContainerCmd(containerId)
-            .withStdOut(true)
-            .withStdErr(true)
-            .exec(logContainerResultCallback)
-            .awaitCompletion();
+         .withStdOut(true)
+         .withStdErr(true)
+         .exec(logContainerResultCallback)
+         .awaitCompletion();
    ```
 6. 删除容器  
    ```java
@@ -1890,22 +1894,176 @@ DockerClient dockerClient = DockerClientBuilder.getInstance().build();
 实现流程：docker 负责运行java程序，并且得到结果
 1. 把用户的代码保存为文件  
 2. 编译代码文件，得到class文件  
-3. **把编译好的文件上传到容器环境内** new  
+3. **把编译好的文件上传到容器环境内** **new**  
    3.1 自定义容器  
    3.1.1 在已有镜像的基础上再扩展：eg 拉取现成的Java环境 (包含Jdk)，再把编译后的文件复制到容器中 ✔  
    3.1.2 完全自定义容器  
 
-   3.2 每个
-4. **在容器中执行代码，得到输出结果** new  
+   3.2 要创建一个可交互的容器，能接收多次输入和输出（如果每个测试用例都单独创建一个容器，每个容器只执行一次java命令的话，会浪费性能）  
+   3.2.1创建容器时，可以指定文件路径 (Volumn) 映射，作用是把本地的文件同步到容器中，可以让容器访问。也可以叫容器挂载目录  
+   ```
+   HostConfig hostConfig = new HostConfig();
+   hostConfig.setBinds(new Bind(userCodeParentPath,new Volume("/app")));
+   ```
+
+4. **在容器中执行代码，得到输出结果** **new**  
+   ```
+   使用docker exec操作步骤3 已经启动的容器
+   docker exec lucid_raman（容器id） java -cp /app Main 1 3
+   ```
+   4.1 要将上面命令按照空格拆分，作为一个数组传递，否则可能会被识别为一个字符串，而不是多个参数
+   ```java
+   //docker exec lucid_raman java -cp /app Main 1 3
+   String[] inputArgsArray = inputArgs.split(" ");
+   String[] cmdArray = ArrayUtil.append(new String[]{"java", "-cp", "/app", "Main"}, inputArgsArray);
+   ExecCreateCmdResponse execCreateCmdResponse = dockerClient.execCreateCmd(containerId)
+         .withCmd(cmdArray)
+         .withAttachStderr(true)
+         .withAttachStdin(true)
+         .withAttachStdout(true)
+         .exec();
+   ```
+   4.2 执行命令，通过回调接口来获取程序的输出结果，并且通过 StreamType 来区分标准输出和错误输出。
+   ```java
+   String execCreateCmdResponseId = execCreateCmdResponse.getId();
+   ExecStartResultCallback execStartResultCallback = new ExecStartResultCallback() {
+      @Override
+      public void onNext(Frame frame) {
+         StreamType streamType = frame.getStreamType();
+         if (StreamType.STDERR.equals(streamType)) {
+            System.out.println("输出错误结果：" + new String(frame.getPayload()));
+         } else {
+            System.out.println("输出结果：" + new String(frame.getPayload()));
+         }
+         super.onNext(frame);
+      }
+   };
+   try {
+      dockerClient.execStartCmd(execCreateCmdResponseId)
+            .exec(execStartResultCallback)
+            .awaitCompletion();
+   } catch (InterruptedException e) {
+      System.out.println("程序执行异常");
+      throw new RuntimeException(e);
+   }
+   ```
+   尽量复用之前的ExecuteMessage 对象，在异步接口中填充正常和异常信息，这样之后流程的代码都可以复用。(最后的代码和README中的不太一样)  
+
+   4.3 获取程序执行时间——和Java原生思想一样，程序开始时启动计时器，程序结束后，结束计时器
+   ```java
+   StopWatch stopWatch = new StopWatch();
+   Long execTime = 0L;
+   ____________________________________________________
+   //执行前后，启动和关闭计时器
+   stopWatch.start();
+   dockerClient.execStartCmd(execCreateCmdResponseId)
+         .exec(execStartResultCallback)
+         .awaitCompletion();
+   stopWatch.stop();
+   ```
+
+   4.4 获取程序执行内存  
+   程序占用的内存每个时刻都在变化，所以你不可能获取到所有时间点的内存  
+   So 我们要做的是，定义一个周期，定期地获取程序的内存
+   ```java
+   StatsCmd statsCmd = dockerClient.statsCmd(containerId);
+   ResultCallback<Statistics> statisticsResultCallback = statsCmd.exec(new ResultCallback<Statistics>() {
+      @Override
+      public void onStart(Closeable closeable) {
+
+      }
+
+      @Override
+      public void onNext(Statistics statistics) {
+         System.out.println("内存占用：" + statistics.getMemoryStats().getUsage());
+      }
+
+      @Override
+      public void onError(Throwable throwable) {
+
+      }
+
+      @Override
+      public void onComplete() {
+
+      }
+
+      @Override
+      public void close() throws IOException {
+
+      }
+   });
+   statsCmd.exec(statisticsResultCallback);
+   ```
 5. 执行代码得到输出结果  
 6. 文件清理，释放空间  
 7. 错误处理，提升程序健壮性  
 
 设计模式——模板方法，定义同一套实现流程，让不同的子类去负责不同流程中的具体实现。执行步骤一样每个步骤的实现方式不一样。
 
-
 #### Docker沙箱的安全性
-
+1. 超时控制  
+   执行容器时，可以增加超时参数控制值  
+   ```java
+   dockerClient.execStartCmd(execCreateCmdResponseId)
+         .exec(execStartResultCallback)
+         .awaitCompletion(TIME_OUT, TimeUnit.MICROSECONDS);
+   ```
+   但是，这种方式无论超时与否，都会往下执行，无法判断是否超时。  
+   解决方案：可以定义一个标志，如果程序执行完成，把超时标志设置为 false。
+   ```java
+   final boolean[] timeout = {true};
+   ExecStartResultCallback execStartResultCallback = new ExecStartResultCallback() {
+      @Override
+      public void onComplete() {
+         timeout[0] = false;
+         super.onComplete();
+      }
+      ...
+   };
+   ```
+2. 内存资源  
+   通过 HostConfig 的 withMemory 等方法（包括Swap），设置容器的最大内存和资源限制  
+   ```java
+   CreateContainerCmd createContainerCmd = dockerClient.createContainerCmd(image);
+   HostConfig hostConfig = new HostConfig();
+   hostConfig.withMemory(100 * 1000 * 1000L);
+   hostConfig.withMemorySwap(0L);
+   hostConfig.withCpuCount(1L);
+   hostConfig.setBinds(new Bind(userCodeParentPath, new Volume("/app")));
+   CreateContainerResponse createConfigResponse = createContainerCmd
+         .withHostConfig(hostConfig)
+         . ...
+         .exec();
+   System.out.printl
+   ```
+3. 网络资源  
+   创建容器时，设置网络配置为关闭
+   ```java
+   CreateContainerResponse createConfigResponse = createContainerCmd
+         .withNetworkDisabled(true)
+         . ...
+         .exec();
+   ```
+4. 权限管理  
+   Docker 容器已经做了系统层面的隔离，比较安全，但不能保证绝对安全  
+   4.1 结合 Java 安全管理器和其他策略去使用  
+   4.2 限制用户不能向 root 根目录写文件
+      ```java
+      CreateContainerResponse createConfigResponse = createContainerCmd
+         .withReadonlyRootfs(true)
+         . ...
+         .exec();
+      ```
+   4.3 Linux 自带的一些安全管理措施，比如 seccomp (Secure Computing Mode) 是一个用于 Linux 内核的安全功能，它允许你限制进程可以执行的系统调用，从而减少潜在的攻击面和提高容器的安全性。通过配置seccomp，你可以控制容器内进程可以使用的系统调用类型和参数。  
+   示例 seccomp 配置文件 profile.json：
+      ```java
+   
+      ```
+   在 hostConfig 中开启安全机制:
+      ```java
+      
+      ```
 ### Question：
 
 1. vue中父子组件之间传值 & 相互管理 的操作 interface Props {xxxx} & const props = withDefaults
@@ -1932,7 +2090,8 @@ DockerClient dockerClient = DockerClientBuilder.getInstance().build();
    File.separator 分隔符——兼容windows的分隔符（为什么？不同OS的分隔符的区别？）
 5. UUID是干嘛的
 6. 魔法值？什么意思，见沙箱系统的 JavaNativeCodeSandbox
-7. 
+7. withTty(true)?
+8. 
 
 #### 异常处理方式：
 运行程序报错，自己创建的程序包不存在  

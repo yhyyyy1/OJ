@@ -789,61 +789,62 @@ module.exports = defineConfig({
 
 ```js
 <template>
-  <div id="code-editor" ref="codeEditorRef" style="min-height: 400px"/>
-  <!--  <a-button @click="fillValue">填充值</a-button>-->
+    <div id="code-editor" ref="codeEditorRef" style="min-height: 400px"/>
+    <!--  <a-button @click="fillValue">填充值</a-button>-->
 </template>
 
 <script setup lang="ts">
-  import * as monaco from "monaco-editor";
-  import {onMounted, ref, toRaw, defineProps, withDefaults} from "vue";
+    import * as monaco from "monaco-editor";
+    import {onMounted, ref, toRaw, defineProps, withDefaults} from "vue";
 
-  interface Props {
+    interface Props {
     value: string;
     handleChange: (v: string) => void;
-  }
+}
 
-  const props = withDefaults(defineProps<Props>(), {
-    value: () => "",
-    handleChange: (v: string) => {
-      console.log();
+    const props = withDefaults(defineProps
+    <Props>(), {
+        value: () => "",
+        handleChange: (v: string) => {
+        console.log();
     },
-  });
-  const codeEditorRef = ref();
-  const codeEditor = ref();
-  const value = ref("hello world");
-
-  // const fillValue = () => {
-  //   if (!codeEditor.value) {
-  //     return;
-  //   }
-  //   toRaw(codeEditor.value).setValue("新的值");
-  // };
-  onMounted(() => {
-    if (!codeEditorRef.value) {
-      return;
-    }
-
-    codeEditor.value = monaco.editor.create(codeEditorRef.value, {
-      value: value.value,
-      language: "java",
-      automaticLayout: true,
-      minimap: {
-        enabled: true,
-      },
-      // lineNumbers: "off",
-      // roundedSelection: false,
-      // scrollBeyondLastLine: false,
-      readOnly: false,
-      theme: "vs-dark",
     });
+        const codeEditorRef = ref();
+        const codeEditor = ref();
+        const value = ref("hello world");
 
-    codeEditor.value.onDidChangeModelContent(() => {
-      console.log("目前的内容为：", toRaw(codeEditor.value).getValue());
-    });
-  });
-  // Hover on each property to see its docs!
-</script>
-<style scoped></style>
+        // const fillValue = () => {
+            //   if (!codeEditor.value) {
+            //     return;
+            //   }
+            //   toRaw(codeEditor.value).setValue("新的值");
+            // };
+            onMounted(() => {
+                if (!codeEditorRef.value) {
+                    return;
+                }
+
+                codeEditor.value = monaco.editor.create(codeEditorRef.value, {
+                    value: value.value,
+                    language: "java",
+                    automaticLayout: true,
+                    minimap: {
+                        enabled: true,
+                    },
+                    // lineNumbers: "off",
+                    // roundedSelection: false,
+                    // scrollBeyondLastLine: false,
+                    readOnly: false,
+                    theme: "vs-dark",
+                });
+
+                codeEditor.value.onDidChangeModelContent(() => {
+                    console.log("目前的内容为：", toRaw(codeEditor.value).getValue());
+                });
+            });
+            // Hover on each property to see its docs!
+            </script>
+            <style scoped></style>
 ```
 
 配置参数 参考 => http://chart.zhenglinglu.cn/pages/2244bd/#%E5%9C%A8-vue-%E4%B8%AD%E4%BD%BF%E7%94%A8
@@ -945,7 +946,6 @@ TypeError: data is not iterable
 
 #### 页面6 题目提交浏览页
 
-
 ### 判题模块预开发
 
 判题服务 —— 连接代码沙箱 & 用户  
@@ -1013,38 +1013,38 @@ TypeError: data is not iterable
 4. 上面的问题的解决——使用工厂模式，根据用户传入的字符串参数（沙箱类别），来生成对应的沙箱实现类  
    此处使用静态工厂模式，实现比较简单，符合我们的需求
 
-```java
-package com.yupi.yhyoj.judge.codesandbox;
+   ```java
+   package com.yupi.yhyoj.judge.codesandbox;
 
-import com.yupi.yhyoj.judge.codesandbox.impl.ExampleCodeSandbox;
-import com.yupi.yhyoj.judge.codesandbox.impl.RemoteCodeSandbox;
-import com.yupi.yhyoj.judge.codesandbox.impl.ThirdPartyCodeSandbox;
+   import com.yupi.yhyoj.judge.codesandbox.impl.ExampleCodeSandbox;
+   import com.yupi.yhyoj.judge.codesandbox.impl.RemoteCodeSandbox;
+   import com.yupi.yhyoj.judge.codesandbox.impl.ThirdPartyCodeSandbox;
 
-/**
- * 代码沙箱工厂（根据字符串参数创建指定的代码沙箱实例）
- */
-public class CodeSandboxFactory {
+   /**
+    * 代码沙箱工厂（根据字符串参数创建指定的代码沙箱实例）
+    */
+   public class CodeSandboxFactory {
 
-    /**
-     * 创建代码沙箱示例
-     *
-     * @param type 沙箱类型
-     * @return
-     */
-    public static CodeSandbox newInstance(String type) {
-        switch (type) {
-            case "example":
-                return new ExampleCodeSandbox();
-            case "remote":
-                return new RemoteCodeSandbox();
-            case "thirdParty":
-                return new ThirdPartyCodeSandbox();
-            default:
-                return new ExampleCodeSandbox();
-        }
-    }
-}
-```
+      /**
+       * 创建代码沙箱示例
+       *
+       * @param type 沙箱类型
+       * @return
+       */
+      public static CodeSandbox newInstance(String type) {
+         switch (type) {
+               case "example":
+                  return new ExampleCodeSandbox();
+               case "remote":
+                  return new RemoteCodeSandbox();
+               case "thirdParty":
+                  return new ThirdPartyCodeSandbox();
+               default:
+                  return new ExampleCodeSandbox();
+         }
+      }
+   }
+   ```
 
 5. 参数配置化，把项目中的一些可以交给用户去自定义的选项或字符串，写到配置文件中。
    这样开发者只需要改配置文件，而不需要去看你的项目代码，就能够自定义使用你项目的更多功能。
@@ -1141,6 +1141,7 @@ public class CodeSandboxFactory {
     3. 判断题目的限制是否符合要求
     4. 可能还有其他
 6. 修改数据库中判题结果
+
 #### 策略模式优化
 
 **策略模式**  
@@ -1157,7 +1158,8 @@ public class CodeSandboxFactory {
 4. 再新增一种判题策略，通过 if ... else ... 的方式选择使用哪种策略   
    但是，如果选择某种判题策略的过程比较复杂，如果都写在调用判题服务的代码中，代码会越来越复杂，会有大量 if ... else
    ...，所以建议单独编写一个判断策略的类。
-5. 定义JudgeManager，目的是尽量简化对判题功能的调用，让调用方写最少的代码、调用最简单。对于判题策略的选取，也是在 JudgeManager 里处理的。
+5. 定义JudgeManager，目的是尽量简化对判题功能的调用，让调用方写最少的代码、调用最简单。对于判题策略的选取，也是在
+   JudgeManager 里处理的。
    ```java
    package com.yupi.yhyoj.judge;
 
@@ -1197,10 +1199,14 @@ public class CodeSandboxFactory {
    处理：加@lazy注解？lazyload？
 
 ## 代码沙箱实现！！！！
+
 代码沙箱的作用——只负责接收值，运行代码，得出结果，不关注是否正确  
 记得之前有提到过，要通过api调用的方式去连接代码沙箱，所以需要新建一个Spring Boot Web项目（提供一个能执行代码、操作代码沙箱的接口）
+
 #### 项目初始化
-Maven、Java8、Springboot2.7  
+
+Maven、Java8、Springboot2.7
+
 1. 编写启动配置
       ```yaml
       server:
@@ -1221,8 +1227,10 @@ Maven、Java8、Springboot2.7
       }
    }
    ```
+
 ### 代码实现——Java原生实现
-代码沙箱需要：接收代码 => 编译代码（javac）=> 执行代码（java）  
+
+代码沙箱需要：接收代码 => 编译代码（javac）=> 执行代码（java）
 
 ```
 javac .\SimpleCompute.java
@@ -1232,11 +1240,12 @@ java -cp . SimpleCompute 1 2
 ```
 
 乱码原因：终端是GBK编码，java代码文件本身是UTF-8编码两者不一致，导致乱码  
-解决方式：用'javac -encoding utf-8 xxxx路径'的方式去改（不要用chcp的方式去改变终端的编码方式——因为其他运行项目代码的人也要改变环境，兼容性很差）  
+解决方式：用'javac -encoding utf-8 xxxx路径'的方式去改（不要用chcp的方式去改变终端的编码方式——因为其他运行项目代码的人也要改变环境，兼容性很差）
 
 限定用户输入的代码类名为Main——将文件名设置为Main（统一类名）
 
 #### 核心流程实现：
+
 核心实现思路：程序代替人工，用程序来操作命令，去编译执行代码
 核心依赖：Java进程类Process
 
@@ -1273,7 +1282,7 @@ java -cp . SimpleCompute 1 2
    ```
    2.2 java获取控制台输出  
    通过exitValue判断程序是否正常返回  
-   从inputStream（获取的是程序到控制台的input） 和 errorStream 获取控制台输出  
+   从inputStream（获取的是程序到控制台的input） 和 errorStream 获取控制台输出
    ```java
    String compileCmd = String.format("javac -encoding utf-8 %s", userCodeFile.getAbsoluteFile());
    try {
@@ -1446,14 +1455,14 @@ java -cp . SimpleCompute 1 2
       //        judgeInfo.setMemory();
       executeCodeResponse.setJudgeInfo(judgeInfo);
    ```
-5. **文件清理，释放空间**  
+5. **文件清理，释放空间**
    ```java
    if (userCodeFile.getParentFile() != null) {
       boolean del = FileUtil.del(userCodeParentPath);
       System.out.println("删除" + (del ? "成功" : "失败"));
    }
    ```
-6. **错误处理，提升程序健壮性**  
+6. **错误处理，提升程序健壮性**
    ```java
    /**
    * 获取错误响应
@@ -1472,7 +1481,9 @@ java -cp . SimpleCompute 1 2
    ```
 
 #### 异常情况演示：（important）
+
 用户提交恶意代码怎么办
+
 1. **执行超时**（时间上）  
    eg：程序会一直等待线程苏醒
    ```java
@@ -1487,9 +1498,10 @@ java -cp . SimpleCompute 1 2
        }
    }
    ```
-   
+
 2. **占用内存**（空间上）  
-   eg：程序会卡死（但是实际运行中，我们会发现，内存占用到达一定程度后，程序会自动报错：java.lang.OutOfMemoryError: Java heap space——这是一个 JVM 保护机制）
+   eg：程序会卡死（但是实际运行中，我们会发现，内存占用到达一定程度后，程序会自动报错：java.lang.OutOfMemoryError: Java heap
+   space——这是一个 JVM 保护机制）
    ```java
    import java.util.ArrayList;
    import java.util.List;
@@ -1580,6 +1592,7 @@ java -cp . SimpleCompute 1 2
    比如：删除服务器所有文件 rm -rf； dir； rs 都是很危险的
 
 #### 异常情况解决方式：（very important）——JAVA程序安全控制
+
 1. **超时控制**  
    中心思想：判断运行时间 —— new一个新线程（守护线程）用于监控执行程序的时间
    ```java
@@ -1606,7 +1619,7 @@ java -cp . SimpleCompute 1 2
 3. **限制代码 —— 黑白名单**  
    先定义一个黑白名单，比如哪些操作时禁止的，可以就是一个列表  
    应用的是hutool的字典树工具，可以用更少的空间存储更多的敏感词汇  
-   缺点：无法遍历所有的黑名单；不同的编程语言中的关键词不同，人工成本很大  
+   缺点：无法遍历所有的黑名单；不同的编程语言中的关键词不同，人工成本很大
    ```java
    private static final List<String> blacklist = Arrays.asList("Files","exec");
    //校验代码（通过黑名单 balckList 应用字典树进行匹配）
@@ -1720,32 +1733,41 @@ java -cp . SimpleCompute 1 2
    如果要做比较严格的权限限制，需要自己去判断哪些文件、包名需要允许读写，粒度太细了，难以精细化控制；  
    本身就是Java代码，也有可能存在漏洞，还是程序上的限制，没到程序层面  
    **优点**：  
-   权限控制很灵活，实现简单  
+   权限控制很灵活，实现简单
 5. **环境隔离**  
    系统层面上，把用户程序封装到沙箱中，和宿主机（电脑/服务器）隔离开
+
 ### 代码实现——Docker实现（前期准备）
-为什么要用Docker容器技术呢  
-* 为了提升系统的安全性，使用Docker把不同的程序和宿主机隔离，使得某个程序（应用）的执行不会影响到系统本身  
+
+为什么要用Docker容器技术呢
+
+* 为了提升系统的安全性，使用Docker把不同的程序和宿主机隔离，使得某个程序（应用）的执行不会影响到系统本身
 
 #### Docker的基本用法
+
 镜像: 用来创建容器的安装包，可以理解为给电脑安装操作系统的系统镜像  
 容器: 通过镜像来创建的一套运行环境，一个容器里可以运行多个程序，可以理解为一个电脑实例  
 Dockerfile: 制作镜像的文件，可以理解为制作镜像的一个清单  
 镜像仓库:存放镜像的仓库，用户可以从仓库下载现成的镜像，也可以把做好的镜像放到仓库里  
 推荐使用 docker 官方的镜像仓库: https://hub.docker.com/search?q=nginx
+
 #### Docker实现核心
+
 <img src="doc/docker.png" width="50%">
 
-看图理解  
+看图理解
+
 1. Docker 运行在 Linux 内核上
 2. CGroups: 实现了容器的资源隔离，底层是 Linux Cgroup 命令，能够控制进程使用的资源
 3. Network 网络: 实现容器的网络隔离，docker 容器内部的网络互不影响
 4. Namespaces 命名空间: 可以把进程隔离在不同的命名空间下，每个容器他都可以有自己的命名空间，不同的命名空间下的进程互不影响。
 5. storage 存储空间: 容器内的文件是相互隔离的，也可以去使用宿主机的文件
 
-#### 命令行操作docker  
+#### 命令行操作docker
+
 `[OPTIONS]` 选项；`IMAGE`镜像；`[COMMAND]`要执行的命令；`[ARG...]`参数
-1. 查看命令用法  
+
+1. 查看命令用法
    ```
    docker --help
    ```
@@ -1753,13 +1775,13 @@ Dockerfile: 制作镜像的文件，可以理解为制作镜像的一个清单
    ```
    docker run(具体子命令) --help
    ```
-2. 从远程仓库拉取镜像  
+2. 从远程仓库拉取镜像
    ```
    docker pull [OPTIONS] NAME[:TAG|@DIGEST]
    //实例
    sudo docker pull hello-world
    ```
-3. 根据镜像创建容器实例  
+3. 根据镜像创建容器实例
    ```
    docker create [OPTIONS] IMAGE [COMMAND] [ARG...]
    ```
@@ -1769,23 +1791,23 @@ Dockerfile: 制作镜像的文件，可以理解为制作镜像的一个清单
    //得到68998a9e29fbe990f36a54f1366c48079c82a30eb06cbe082f6fe89c07fc449f
    //就是containerld
    ```
-4. 查看容器状态  
+4. 查看容器状态
    ```
    docker ps -a
    ```
-5. 启动容器  
+5. 启动容器
    ```
    docker start [OPTIONS] CONTIANER（容器名称 or Id）
    ```
-6. 查看日志   
+6. 查看日志
    ```
    docker logs[OPTIONS] CONTAINER（容器名称 or Id）
    ```
-7. 删除容器实例  
+7. 删除容器实例
    ```
    docker rm[OPTIONS] CONTAINER（容器名称 or Id）
    ```
-8. 删除镜像  
+8. 删除镜像
    ```
    docker rmi IMAGE(镜像名称)
    sudo docker rmi hello-world -f（强制删除hello-world示例）
@@ -1795,11 +1817,14 @@ Dockerfile: 制作镜像的文件，可以理解为制作镜像的一个清单
    操作已启动容器
    docker exec containerId
    ```
-#### Java操作Docker  
-Docker-Java：https://github.com/docker-java/docker-java    
-官方指导文档：https://github.com/docker-java/docker-java/blob/main/docs/getting_started.md  
 
-使用Docker-Java库 先引入依赖到 yhyoj-code-sandbox 的pom.xml中  
+#### Java操作Docker
+
+Docker-Java：https://github.com/docker-java/docker-java    
+官方指导文档：https://github.com/docker-java/docker-java/blob/main/docs/getting_started.md
+
+使用Docker-Java库 先引入依赖到 yhyoj-code-sandbox 的pom.xml中
+
 ```xml
 <!-- https://mvnrepository.com/artifact/com.github.docker-java/docker-java -->
 <dependency>
@@ -1816,13 +1841,17 @@ Docker-Java：https://github.com/docker-java/docker-java
 ```
 
 DockerClientConfig: 用于定义初始化 DockerClient 的配置(类比 MySQL 的连接、线程数配置)  
-DockerHttpClient: 用于向 Docker 守护进程(操作 Docker 的接口) 发送请求的客户端，低层封装(不推荐使用)，你要自己构建请求参数 (简单地理解成JDBC)  
-DockerClient (推荐): 才是真正和 Docker 守护进程交互的、最方便的 SDK，高层封装，对DockerHttpClient 再进行了一层封装 (理解成 MyBatis) ，提供了现成的增删改查
+DockerHttpClient: 用于向 Docker 守护进程(操作 Docker 的接口) 发送请求的客户端，低层封装(不推荐使用)
+，你要自己构建请求参数 (简单地理解成JDBC)  
+DockerClient (推荐): 才是真正和 Docker 守护进程交互的、最方便的 SDK，高层封装，对DockerHttpClient 再进行了一层封装 (理解成
+MyBatis) ，提供了现成的增删改查
 
 #### Linux Docker 远程开发
+
 ```java
 DockerClient dockerClient = DockerClientBuilder.getInstance().build();
 ```
+
 建立Docker客户端，这是Docker-Java用到的最关键用法
 
 1. 拉取镜像：  
@@ -1843,7 +1872,7 @@ DockerClient dockerClient = DockerClientBuilder.getInstance().build();
          .awaitCompletion();
    System.out.println("下载完成");
    ```
-2. 创建容器  
+2. 创建容器
    ```java
    CreateContainerCmd createContainerCmd = dockerClient.createContainerCmd(image);
    CreateContainerResponse createConfigResponse = createContainerCmd
@@ -1851,7 +1880,7 @@ DockerClient dockerClient = DockerClientBuilder.getInstance().build();
          .exec();
    System.out.println(createConfigResponse);
    ```
-3. 查看容器状态  
+3. 查看容器状态
    ```java
    ListContainersCmd listContainersCmd = dockerClient.listContainersCmd();
    List<Container> containerList = listContainersCmd
@@ -1861,11 +1890,11 @@ DockerClient dockerClient = DockerClientBuilder.getInstance().build();
       System.out.println(container);
    }
    ```
-4. 启动容器  
+4. 启动容器
    ```java
    dockerClient.startContainerCmd(containerId).exec();
    ```
-5. 查看日志  
+5. 查看日志
    ```java
    LogContainerResultCallback logContainerResultCallback = new LogContainerResultCallback(){
       @Override
@@ -1881,32 +1910,35 @@ DockerClient dockerClient = DockerClientBuilder.getInstance().build();
          .exec(logContainerResultCallback)
          .awaitCompletion();
    ```
-6. 删除容器  
+6. 删除容器
    ```java
    dockerClient.removeContainerCmd(containerId).withForce(true).exec();
    ```
-7. 删除镜像  
+7. 删除镜像
    ```java
    dockerClient.removeImageCmd(image).exec();
    ```
 
 ### 代码实现——Docker实现（真正实现）！！！！！！！！！
+
 实现流程：docker 负责运行java程序，并且得到结果
-1. 把用户的代码保存为文件  
-2. 编译代码文件，得到class文件  
+
+1. 把用户的代码保存为文件
+2. 编译代码文件，得到class文件
 3. **把编译好的文件上传到容器环境内** **new**  
    3.1 自定义容器  
    3.1.1 在已有镜像的基础上再扩展：eg 拉取现成的Java环境 (包含Jdk)，再把编译后的文件复制到容器中 ✔  
-   3.1.2 完全自定义容器  
+   3.1.2 完全自定义容器
 
-   3.2 要创建一个可交互的容器，能接收多次输入和输出（如果每个测试用例都单独创建一个容器，每个容器只执行一次java命令的话，会浪费性能）  
-   3.2.1创建容器时，可以指定文件路径 (Volumn) 映射，作用是把本地的文件同步到容器中，可以让容器访问。也可以叫容器挂载目录  
+   3.2
+   要创建一个可交互的容器，能接收多次输入和输出（如果每个测试用例都单独创建一个容器，每个容器只执行一次java命令的话，会浪费性能）  
+   3.2.1创建容器时，可以指定文件路径 (Volumn) 映射，作用是把本地的文件同步到容器中，可以让容器访问。也可以叫容器挂载目录
    ```
    HostConfig hostConfig = new HostConfig();
    hostConfig.setBinds(new Bind(userCodeParentPath,new Volume("/app")));
    ```
 
-4. **在容器中执行代码，得到输出结果** **new**  
+4. **在容器中执行代码，得到输出结果** **new**
    ```
    使用docker exec操作步骤3 已经启动的容器
    docker exec lucid_raman（容器id） java -cp /app Main 1 3
@@ -1947,7 +1979,8 @@ DockerClient dockerClient = DockerClientBuilder.getInstance().build();
       throw new RuntimeException(e);
    }
    ```
-   尽量复用之前的ExecuteMessage 对象，在异步接口中填充正常和异常信息，这样之后流程的代码都可以复用。(最后的代码和README中的不太一样)  
+   尽量复用之前的ExecuteMessage 对象，在异步接口中填充正常和异常信息，这样之后流程的代码都可以复用。(
+   最后的代码和README中的不太一样)
 
    4.3 获取程序执行时间——和Java原生思想一样，程序开始时启动计时器，程序结束后，结束计时器
    ```java
@@ -1995,15 +2028,16 @@ DockerClient dockerClient = DockerClientBuilder.getInstance().build();
    });
    statsCmd.exec(statisticsResultCallback);
    ```
-5. 执行代码得到输出结果  
-6. 文件清理，释放空间  
-7. 错误处理，提升程序健壮性  
+5. 收集整理输出结果
+6. 文件清理，释放空间
+7. 错误处理，提升程序健壮性
 
 设计模式——模板方法，定义同一套实现流程，让不同的子类去负责不同流程中的具体实现。执行步骤一样每个步骤的实现方式不一样。
 
 #### Docker沙箱的安全性
+
 1. 超时控制  
-   执行容器时，可以增加超时参数控制值  
+   执行容器时，可以增加超时参数控制值
    ```java
    dockerClient.execStartCmd(execCreateCmdResponseId)
          .exec(execStartResultCallback)
@@ -2023,7 +2057,7 @@ DockerClient dockerClient = DockerClientBuilder.getInstance().build();
    };
    ```
 2. 内存资源  
-   通过 HostConfig 的 withMemory 等方法（包括Swap），设置容器的最大内存和资源限制  
+   通过 HostConfig 的 withMemory 等方法（包括Swap），设置容器的最大内存和资源限制
    ```java
    CreateContainerCmd createContainerCmd = dockerClient.createContainerCmd(image);
    HostConfig hostConfig = new HostConfig();
@@ -2055,15 +2089,292 @@ DockerClient dockerClient = DockerClientBuilder.getInstance().build();
          . ...
          .exec();
       ```
-   4.3 Linux 自带的一些安全管理措施，比如 seccomp (Secure Computing Mode) 是一个用于 Linux 内核的安全功能，它允许你限制进程可以执行的系统调用，从而减少潜在的攻击面和提高容器的安全性。通过配置seccomp，你可以控制容器内进程可以使用的系统调用类型和参数。  
+   4.3 Linux 自带的一些安全管理措施，比如 seccomp (Secure Computing Mode) 是一个用于 Linux
+   内核的安全功能，它允许你限制进程可以执行的系统调用，从而减少潜在的攻击面和提高容器的安全性。通过配置seccomp，你可以控制容器内进程可以使用的系统调用类型和参数。  
    示例 seccomp 配置文件 profile.json：
       ```java
-   
+      //待完成
       ```
    在 hostConfig 中开启安全机制:
       ```java
-      
+      //待完成
       ```
+
+### 使用模式方法优化沙箱代码
+
+**模板方法**: 定义一套通用的执行流程，让子类负责每个执行步骤的具体实现（能复用的就复用，不能复用的，使用子类进行重写）   
+模板方法的适用场景: 适用于有规范的流程，且执行流程可以复用  
+作用: 大幅节省重复代码量，便于项目扩展、更好维护
+
+1. 抽象出具体的流程  
+   定义一个模板方法抽象类。   
+   先复制具体的实现类，把代码从完整的方法抽离成一个一个子写法
+   ```java
+   @Override
+   public ExecuteCodeResponse executeCode(ExecuteCodeRequest executeCodeRequest) {
+
+      String code = executeCodeRequest.getCode();
+      String language = executeCodeRequest.getLanguage();
+      List<String> inputList = executeCodeRequest.getInputList();
+
+      //1. 把用户的代码保存为文件
+      File userCodeFile = saveCodeToFile(code);
+
+      //2. 编译代码文件，得到class文件
+      ExecuteMessage compileFileExecuteMessage = compileFile(userCodeFile);
+      System.out.println(compileFileExecuteMessage);
+
+      //3. 执行代码得到输出结果
+      List<ExecuteMessage> executeMessageList = runFile(userCodeFile, inputList);
+
+      //4. 收集整理输出结果
+      ExecuteCodeResponse outputResponse = getOutputResponse(executeMessageList);
+
+      //5. 文件清理，释放空间（对应的tmpCode）
+      boolean b = deleteFile(userCodeFile);
+      if (!b) {
+         log.error("deleteFile error, userCodeFile = " + userCodeFile.getAbsolutePath());
+      }
+
+      return outputResponse;
+   }
+   ```
+   只有最终的调用，子方法就是之前操作的剥离
+
+2. 定义子类的具体实现  
+   Java 原生代码沙箱实现，直接复用模板方法定义好的方法实现
+   ```java
+   public class JavaNativeCodeSandbox extends JavaCodeSandboxTemplate {
+      @Override
+      public ExecuteCodeResponse executeCode(ExecuteCodeRequest executeCodeRequest) {
+         return super.executeCode(executeCodeRequest);
+      }
+   }
+   ```
+   Docker 代码沙箱的实现，需要自己重写Runfile
+   ```java
+   /**
+     * //3. 创建容器，把编译好的文件上传到容器环境内
+     * //4. 在容器中执行代码，得到输出结果
+     * @param userCodeFile 用户代码文件
+     * @param inputList    输入样例
+     * @return 执行信息列表
+     */
+    @Override
+    public List<ExecuteMessage> runFile(File userCodeFile, List<String> inputList) {
+        String userCodeParentPath = userCodeFile.getParentFile().getAbsolutePath();
+        //3. 创建容器，把编译好的文件上传到容器环境内
+        DockerClient dockerClient = DockerClientBuilder.getInstance().build();
+        //3.1 拉取镜像
+        String image = "openjdk:8-alpine";
+        if (FIRST_INIT) {
+            PullImageCmd pullImageCmd = dockerClient.pullImageCmd(image);
+            //回调？
+            PullImageResultCallback pullImageResultCallback = new PullImageResultCallback() {
+                @Override
+                public void onNext(PullResponseItem item) {
+                    System.out.println("下载镜像" + item.getStatus());
+                    super.onNext(item);
+                }
+            };
+            try {
+                pullImageCmd
+                        .exec(pullImageResultCallback)
+                        .awaitCompletion();
+            } catch (InterruptedException e) {
+                System.out.println("拉去镜像异常");
+                throw new RuntimeException(e);
+            }
+        }
+        System.out.println("下载完成");
+
+        //3.2 创建容器
+        CreateContainerCmd createContainerCmd = dockerClient.createContainerCmd(image);
+        HostConfig hostConfig = new HostConfig();
+        hostConfig.withMemory(100 * 1000 * 1000L);
+        hostConfig.withMemorySwap(0L);
+        hostConfig.withCpuCount(1L);
+        hostConfig.withSecurityOpts(Arrays.asList("seccomp=安全管理配置字符串"));
+        hostConfig.setBinds(new Bind(userCodeParentPath, new Volume("/app")));
+        CreateContainerResponse createConfigResponse = createContainerCmd
+                .withReadonlyRootfs(true)
+                .withNetworkDisabled(true)
+                .withHostConfig(hostConfig)
+                .withAttachStdin(true)
+                .withAttachStderr(true)
+                .withAttachStdout(true)
+                .withTty(true)
+                .exec();
+        System.out.println(createConfigResponse);
+        String containerId = createConfigResponse.getId();
+        //启动容器
+        dockerClient.startContainerCmd(containerId).exec();
+
+        //4. 在容器中执行代码，得到输出结果
+        List<ExecuteMessage> executeMessageList = new ArrayList<ExecuteMessage>();
+        for (String inputArgs : inputList) {
+            StopWatch stopWatch = new StopWatch();
+            Long execTime = 0L;
+            //4.1
+            //docker exec lucid_raman java -cp /app Main 1 3
+            String[] inputArgsArray = inputArgs.split(" ");
+            String[] cmdArray = ArrayUtil.append(new String[]{"java", "-cp", "/app", "Main"}, inputArgsArray);
+            ExecCreateCmdResponse execCreateCmdResponse = dockerClient.execCreateCmd(containerId)
+                    .withCmd(cmdArray)
+                    .withAttachStderr(true)
+                    .withAttachStdin(true)
+                    .withAttachStdout(true)
+                    .exec();
+            System.out.println("创建执行命令：" + execCreateCmdResponse);
+
+            //4.2
+            ExecuteMessage executeMessage = new ExecuteMessage();
+            final String[] message = {null};//改变变量形式
+            final String[] errorMessage = {null};
+            String execCreateCmdResponseId = execCreateCmdResponse.getId();
+            final boolean[] timeout = {true};
+            ExecStartResultCallback execStartResultCallback = new ExecStartResultCallback() {
+                @Override
+                public void onComplete() {
+                    timeout[0] = false;
+                    super.onComplete();
+                }
+
+                @Override
+                public void onNext(Frame frame) {
+                    StreamType streamType = frame.getStreamType();
+                    if (StreamType.STDERR.equals(streamType)) {
+                        errorMessage[0] = new String(frame.getPayload());
+                        System.out.println("输出错误结果：" + errorMessage[0]);
+
+                    } else {
+                        message[0] = new String(frame.getPayload());
+                        System.out.println("输出结果：" + message[0]);
+                    }
+                    super.onNext(frame);
+                }
+            };
+            //4.4 获取内存占用
+            final long[] maxMemory = {0};
+            StatsCmd statsCmd = dockerClient.statsCmd(containerId);
+            ResultCallback<Statistics> statisticsResultCallback = statsCmd.exec(new ResultCallback<Statistics>() {
+                @Override
+                public void onStart(Closeable closeable) {
+
+                }
+
+                @Override
+                public void onNext(Statistics statistics) {
+                    System.out.println("内存占用：" + statistics.getMemoryStats().getUsage());
+                    maxMemory[0] = Math.max(statistics.getMemoryStats().getUsage(), maxMemory[0]);
+                }
+
+                @Override
+                public void onError(Throwable throwable) {
+
+                }
+
+                @Override
+                public void onComplete() {
+
+                }
+
+                @Override
+                public void close() throws IOException {
+
+                }
+            });
+            statsCmd.exec(statisticsResultCallback);
+            try {
+                //4.3 获取时间消耗（嵌入在4.2 中的）
+                stopWatch.start();
+                dockerClient.execStartCmd(execCreateCmdResponseId)
+                        .exec(execStartResultCallback)
+                        .awaitCompletion(TIME_OUT, TimeUnit.MICROSECONDS);
+                stopWatch.stop();
+                execTime = stopWatch.getLastTaskTimeMillis();
+                statsCmd.close();
+
+            } catch (InterruptedException e) {
+                System.out.println("程序执行异常");
+                throw new RuntimeException(e);
+            }
+            executeMessage.setMessage(message[0]);
+            executeMessage.setErrorMessage(errorMessage[0]);
+            executeMessage.setTime(execTime);
+            executeMessage.setMemory(maxMemory[0]);
+            executeMessageList.add(executeMessage);
+        }
+        return executeMessageList;
+    }
+   ```
+   
+### 代码沙箱API
+直接在Controller中暴露CodeSandbox定义的接口
+```java
+/**
+ * 执行代码
+ *
+ * @param executeCodeRequest
+ * @return
+ */
+@PostMapping("/executeCode")
+ExecuteCodeResponse executeCode(@RequestBody ExecuteCodeRequest executeCodeRequest) {
+   if (executeCodeRequest == null) {
+      throw new RuntimeException("请求参数为空");
+   }
+   return javaNativeCodeSandbox.executeCode(executeCodeRequest);
+}
+```
+
+#### API调用安全性
+如果将服务不做任何的权限校验，直接发到公网，是不安全的。
+1. 调用方与服务提供方之间约定一个字符串(最好加密)  
+   优点:实现最简单，比较适合内部系统之间相互调用(相对可信的环境内部调用)  
+   缺点: 不够灵活，如果 key 泄露或变更，需要重启代码
+
+   代码沙箱服务：先定义约定的字符串
+   ```java
+   // 定义鉴权请求头和密钥
+   private static final String AUTH_REQUEST_HEADER = "auth";
+
+   private static final String AUTH_REQUEST_SECRET = "secretKey";
+   ```
+
+   改造请求，从请求头中获取认证信息，并校验:
+   ```java
+   @PostMapping("/executeCode")
+   ExecuteCodeResponse executeCode(@RequestBody ExecuteCodeRequest executeCodeRequest, HttpServletRequest request, HttpServletResponse response) {
+      String authHeader = request.getHeader(AUTH_REQUEST_HEADER);
+      if (!authHeader.equals(AUTH_REQUEST_SECRET)) {
+         response.setStatus(403);
+         return null;
+      }
+      if (executeCodeRequest == null) {
+         throw new RuntimeException("请求参数为空");
+      }
+      return javaNativeCodeSandbox.executeCode(executeCodeRequest);
+   }
+   ```
+
+   调用方，在调用时补充请求头：
+   ```java
+   String responseStr = HttpUtil.createPost(url)
+            .header(AUTH_REQUEST_HEADER, AUTH_REQUEST_SECRET)
+            .body(json)
+            .execute()
+            .body();
+   ```
+2. API 签名认证  
+   给允许调用的人员分配 accessKey、secretKey，然后校验这两组 key 是否配详细请见 API 开放平台项目
+## 跑通完整的单机项目流程
+
+补充前端提交列表页面
+
+## 单机项目改造成微服务
+
+## 把项目的模块调用改为消息队列
+
 ### Question：
 
 1. vue中父子组件之间传值 & 相互管理 的操作 interface Props {xxxx} & const props = withDefaults
@@ -2091,8 +2402,9 @@ DockerClient dockerClient = DockerClientBuilder.getInstance().build();
 5. UUID是干嘛的
 6. 魔法值？什么意思，见沙箱系统的 JavaNativeCodeSandbox
 7. withTty(true)?
-8. 
+8. @Component是干嘛的？把接口暴露出来？
 
 #### 异常处理方式：
+
 运行程序报错，自己创建的程序包不存在  
 解决方法：执行maven管理中Lifecycle的clean？why？

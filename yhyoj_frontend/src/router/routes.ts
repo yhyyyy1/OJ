@@ -9,7 +9,7 @@ import ManageQuestionView from "@/views/question/ManageQuestionView.vue";
 import QuestionsView from "@/views/question/QuestionsView.vue";
 import ViewQuestionView from "@/views/question/ViewQuestionView.vue";
 import QuestionSubmitView from "@/views/question/QuestionSubmitView.vue";
-import UserInfoView from "@/views/UserInfoView.vue";
+import UserInfoView from "@/views/user/UserInfoView.vue";
 import QuestionSubmitResultView from "@/views/question/QuestionSubmitResultView.vue";
 import UserUpdateView from "@/views/user/UserUpdateView.vue";
 
@@ -29,13 +29,26 @@ export const routes: Array<RouteRecordRaw> = [
         name: "用户注册",
         component: UserRegisterView,
       },
-      {
-        path: "/user/update",
-        name: "用户数据更新",
-        component: UserUpdateView,
-      },
     ],
     meta: {
+      hideInMenu: true,
+    },
+  },
+  {
+    path: "/info",
+    name: "用户信息",
+    component: UserInfoView,
+    meta: {
+      access: AccessEnum.USER,
+      hideInMenu: true,
+    },
+  },
+  {
+    path: "/update",
+    name: "用户数据更新",
+    component: UserUpdateView,
+    meta: {
+      access: AccessEnum.USER,
       hideInMenu: true,
     },
   },
@@ -61,15 +74,7 @@ export const routes: Array<RouteRecordRaw> = [
       hideInMenu: true,
     },
   },
-  {
-    path: "/Info/:id",
-    name: "用户信息",
-    component: UserInfoView,
-    meta: {
-      access: AccessEnum.USER,
-      hideInMenu: true,
-    },
-  },
+
   {
     path: "/view/question/:id",
     name: "在线做题",

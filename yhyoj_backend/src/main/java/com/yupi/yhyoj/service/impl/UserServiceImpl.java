@@ -6,6 +6,7 @@ import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import com.yupi.yhyoj.constant.CommonConstant;
 import com.yupi.yhyoj.constant.UserConstant;
 import com.yupi.yhyoj.exception.BusinessException;
+import com.yupi.yhyoj.model.dto.user.UserUpdateRequest;
 import com.yupi.yhyoj.service.UserService;
 import com.yupi.yhyoj.common.ErrorCode;
 import com.yupi.yhyoj.mapper.UserMapper;
@@ -46,7 +47,7 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements Us
     public long userRegister(String userAccount, String userPassword, String checkPassword, String userName) {
         // 1. 校验
         if (StringUtils.isAnyBlank(userAccount, userPassword, checkPassword, userName)) {
-            throw new BusinessException(ErrorCode.PARAMS_ERROR, "参数为空");
+            throw new BusinessException(ErrorCode.PARAMS_ERROR, "参数不能为空");
         }
         if (userName.length() < 2) {
             throw new BusinessException(ErrorCode.PARAMS_ERROR, "用户名过短");
@@ -63,11 +64,19 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements Us
         }
         synchronized (userAccount.intern()) {
             // 账户不能重复
-            QueryWrapper<User> queryWrapper = new QueryWrapper<>();
-            queryWrapper.eq("userAccount", userAccount);
-            long count = this.baseMapper.selectCount(queryWrapper);
-            if (count > 0) {
+            QueryWrapper<User> queryWrapperOfUserAccount = new QueryWrapper<>();
+            queryWrapperOfUserAccount.eq("userAccount", userAccount);
+            long countOfUserAccount = this.baseMapper.selectCount(queryWrapperOfUserAccount);
+            if (countOfUserAccount > 0) {
                 throw new BusinessException(ErrorCode.PARAMS_ERROR, "账号重复");
+            }
+
+            // 用户名不能重复
+            QueryWrapper<User> queryWrapperOfUserName = new QueryWrapper<>();
+            queryWrapperOfUserName.eq("userName", userName);
+            long countOfUserName = this.baseMapper.selectCount(queryWrapperOfUserName);
+            if(countOfUserName >0){
+                throw new BusinessException(ErrorCode.PARAMS_ERROR, "用户名重复");
             }
             // 2. 加密
             String encryptPassword = DigestUtils.md5DigestAsHex((SALT + userPassword).getBytes());
@@ -112,6 +121,13 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements Us
         request.getSession().setAttribute(UserConstant.USER_LOGIN_STATE, user);
         return this.getLoginUserVO(user);
     }
+
+//    @Override
+//    public boolean updateById(UserUpdateRequest userUpdateRequest) {
+//        //更新成功——返回true；更新失败——返回false
+//
+//        return true;
+//    }
 
     @Override
     public LoginUserVO userLoginByMpOpen(WxOAuth2UserInfo wxOAuth2UserInfo, HttpServletRequest request) {

@@ -35,7 +35,7 @@
             <a-doption v-if="isLogin === 'no'" @click="login">
               去登录
             </a-doption>
-            <a-doption @click="updateUser">
+            <a-doption v-if="isLogin === 'yes'" @click="updateUser">
               更改登录信息
             </a-doption>
             <a-doption @click="logout">退出登录</a-doption>
@@ -108,11 +108,15 @@ const login = () => {
 };
 
 const updateUser = () => {
-  router.push({ path: "/user/update" });
-}
+  router.push({
+    path: "/update",
+    query: { userId: store.state.user.loginUser.id },
+  });
+};
 const toUserInfo = () => {
   router.push({
-    path: `/Info/${store.state.user.loginUser.id}`,
+    path: "/info",
+    query: { userId: store.state.user.loginUser.id },
   });
 };
 const doMenuClick = (key: string) => {

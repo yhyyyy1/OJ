@@ -73,8 +73,8 @@ tabnine真他娘的好用啊 我日！！！！！！！！！
 
 yarn add --dev @arco-design/web-vue——引入组件库arco design(使用非常方便)
 
-   ```ts
-   import {createApp} from 'vue'
+```ts
+import {createApp} from 'vue'
 import ArcoVue from '@arco-design/web-vue';
 import App from './App.vue';
 import '@arco-design/web-vue/dist/arco.css';
@@ -83,7 +83,7 @@ const app = createApp(App);
 app.use(ArcoVue);
 app.mount('#app');
 //完整引入（写进main.ts）
-   ```
+```
 
 ### 项目通用布局：(于layouts文件夹中)
 

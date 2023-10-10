@@ -8,7 +8,7 @@
         <router-view />
       </a-layout-content>
       <a-layout-footer class="footer"
-        >一个简单的开发中的OJ平台 By Yhy
+        >一个简单的开发中的OJ平台 By Yhy 联系我yinhongyang546@gmail.com
       </a-layout-footer>
     </a-layout>
   </div>

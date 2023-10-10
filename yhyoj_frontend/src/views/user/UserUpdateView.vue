@@ -1,6 +1,6 @@
 <template>
   <div class="userUpdateView">
-    <h2 style="margin-bottom: 16px">用户数据更新</h2>
+    <h2 style="margin-bottom: 16px">用户数据更新{{ userId }}</h2>
     <a-form
       style="max-width: 480px; margin: 0 auto"
       label-align="left"
@@ -26,14 +26,20 @@
 </template>
 
 <script setup lang="ts">
-import { reactive } from "vue";
+import { reactive, onMounted, ref } from "vue";
 import { UserControllerService, UserLoginRequest } from "../../../generated";
 import message from "@arco-design/web-vue/es/message";
-import { useRouter } from "vue-router";
+import { useRouter, useRoute } from "vue-router";
 import { useStore } from "vuex";
 
 const router = useRouter();
+const route = useRoute();
 const store = useStore();
+
+const userId = ref(route.query.userId);
+onMounted(() => {
+  console.log(userId.value);
+});
 /**
  * 表单信息
  */

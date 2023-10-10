@@ -209,6 +209,8 @@ public class UserController {
         User user = new User();
         BeanUtils.copyProperties(userUpdateRequest, user);
         boolean result = userService.updateById(user);
+        //boolean result = userService.updateById(userUpdateRequest);
+        //表示如果result为false，则表示抛出错误代码OPERATION_ERROR
         ThrowUtils.throwIf(!result, ErrorCode.OPERATION_ERROR);
         return ResultUtils.success(true);
     }

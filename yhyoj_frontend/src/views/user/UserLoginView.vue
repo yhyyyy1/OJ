@@ -63,11 +63,6 @@ const handleSubmit = async () => {
     message.error("登陆失败" + res.message);
   }
 };
-const goRegister = () => {
-  router.push({
-    path: "/user/register",
-  });
-};
 const toRegister = () => {
   router.push({
     path: "/user/register",

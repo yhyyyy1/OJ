@@ -3,6 +3,7 @@ package com.yupi.yhyoj.service;
 import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
 import com.baomidou.mybatisplus.extension.service.IService;
 import com.yupi.yhyoj.model.dto.user.UserQueryRequest;
+import com.yupi.yhyoj.model.dto.user.UserUpdateRequest;
 import com.yupi.yhyoj.model.entity.User;
 import com.yupi.yhyoj.model.vo.LoginUserVO;
 import com.yupi.yhyoj.model.vo.UserVO;
@@ -39,6 +40,14 @@ public interface UserService extends IService<User> {
      * @return 脱敏后的用户信息
      */
     LoginUserVO userLogin(String userAccount, String userPassword, HttpServletRequest request);
+
+    /**
+     * 用户信息更新（昵称、密码更新、头像——待定）
+     *
+     * @param userUpdateRequest
+     * @return
+     */
+//    boolean updateById(UserUpdateRequest userUpdateRequest);
 
     /**
      * 用户登录（微信开放平台）

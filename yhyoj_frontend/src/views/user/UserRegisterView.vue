@@ -102,7 +102,7 @@ const handleSubmit = async () => {
       replace: true,
     });
   } else {
-    Message.error(res.msg);
+    Message.error(res.message);
   }
 };
 </script>

@@ -89,6 +89,7 @@
 <script setup lang="ts">
 import { onMounted, ref, watchEffect } from "vue";
 import {
+  QuestionControllerService,
   QuestionSubmitControllerService,
   QuestionSubmitQueryRequest,
 } from "../../../generated";
@@ -120,9 +121,11 @@ const searchParams = ref<QuestionSubmitQueryRequest>({
  */
 const loadData = async () => {
   const res =
-    await QuestionSubmitControllerService.listQuestionSubmitVoByPageUsingPost(
-      searchParams.value
-    );
+    await QuestionControllerService.listQuestionSubmitVoByPageUsingPost({
+      ...searchParams.value,
+      sortField: "createTime",
+      sortOrder: "desc",
+    });
   if (res.code === 0) {
     dataList.value = res.data.records;
     console.log(dataList.value);
@@ -215,6 +218,11 @@ const columns = [
     // questionSubmit
   },
   {
+    title: "题目编号",
+    slotName: "questionId",
+    // questionSubmit
+  },
+  {
     title: "用户",
     dataIndex: "userId",
     // questionSubmit
@@ -223,12 +231,6 @@ const columns = [
     title: "昵称",
     slotName: "userName",
     // user
-  },
-  {
-    title: "题目编号",
-    slotName: "questionId",
-    // questionSubmit
-    // todo
   },
   {
     title: "判题结果",

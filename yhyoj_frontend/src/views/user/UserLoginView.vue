@@ -22,8 +22,8 @@
             >登录
           </a-button>
           <a-button type="success" @click="toRegister" style="width: 120px"
-            >去注册</a-button
-          >
+            >去注册
+          </a-button>
         </a-space>
       </a-form-item>
     </a-form>
@@ -63,7 +63,6 @@ const handleSubmit = async () => {
     message.error("登陆失败" + res.message);
   }
 };
-
 const toRegister = () => {
   router.push({
     path: "/user/register",

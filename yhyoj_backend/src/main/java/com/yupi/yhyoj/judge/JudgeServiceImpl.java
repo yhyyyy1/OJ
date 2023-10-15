@@ -13,9 +13,11 @@ import com.yupi.yhyoj.model.dto.question.JudgeCase;
 import com.yupi.yhyoj.judge.codesandbox.model.JudgeInfo;
 import com.yupi.yhyoj.model.entity.Question;
 import com.yupi.yhyoj.model.entity.QuestionSubmit;
+import com.yupi.yhyoj.model.enums.JudgeInfoMessageEnum;
 import com.yupi.yhyoj.model.enums.QuestionSubmitStatusEnum;
 import com.yupi.yhyoj.service.QuestionService;
 import com.yupi.yhyoj.service.QuestionSubmitService;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 
@@ -27,6 +29,7 @@ import java.util.stream.Collectors;
  * 判题服务实现类
  */
 @Service
+@Slf4j
 public class JudgeServiceImpl implements JudgeService {
 
     @Resource
@@ -98,13 +101,22 @@ public class JudgeServiceImpl implements JudgeService {
         judgeContext.setJudgeCaseList(judgeCaseList);
         judgeContext.setQuestion(question);
         judgeContext.setQuestionSubmit(questionSubmit);
-
+        if (executeCodeResponse.getStatus() == 3) {
+            judgeContext.setIsCompileError(true);
+        }
+        //log.info(String.valueOf(judgeContext));
         //使用judgeManager，避免因为对不同语言进行不同操作而导致不停的if... else if... 导致代码冗余的情况
         JudgeInfo judgeInfo = judgeManager.doJudge(judgeContext);
         //6. 需要修改数据库中的判题结果
         questionSubmitUpdate = new QuestionSubmit();
         questionSubmitUpdate.setId(questionSubmitId);
-        questionSubmitUpdate.setStatus(QuestionSubmitStatusEnum.SUCCEED.getValue());
+        //失败要额外判断
+        if (!judgeInfo.getMessage().equals(JudgeInfoMessageEnum.ACCEPTED.getValue())) {
+            questionSubmitUpdate.setStatus(QuestionSubmitStatusEnum.FAILED.getValue());
+        } else {
+            questionSubmitUpdate.setStatus(QuestionSubmitStatusEnum.SUCCEED.getValue());
+        }
+
         questionSubmitUpdate.setJudgeInfo(JSONUtil.toJsonStr(judgeInfo));
         update = questionSubmitService.updateById(questionSubmitUpdate);
         if (!update) {

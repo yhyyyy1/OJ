@@ -25,4 +25,6 @@ public class JudgeContext {
 
     private QuestionSubmit questionSubmit;
 
+    private Boolean isCompileError;
+
 }

@@ -8,6 +8,7 @@ import com.yupi.yhyoj.model.entity.Question;
 import com.yupi.yhyoj.model.enums.JudgeInfoMessageEnum;
 
 import java.util.List;
+import java.util.Optional;
 
 /**
  * Java 程序的判题策略
@@ -23,8 +24,8 @@ public class JavaLanguageJudgeStrategy implements JudgeStrategy {
     @Override
     public JudgeInfo doJudge(JudgeContext judgeContext) {
         JudgeInfo judgeInfo = judgeContext.getJudgeInfo();
-        Long memory = judgeInfo.getMemory();
-        Long time = judgeInfo.getTime();
+        Long memory = Optional.ofNullable(judgeInfo.getMemory()).orElse(0L);
+        Long time = Optional.ofNullable(judgeInfo.getTime()).orElse(0L);
         List<String> inputList = judgeContext.getInputList();
         List<String> outputList = judgeContext.getOutputList();
         Question question = judgeContext.getQuestion();
@@ -34,6 +35,9 @@ public class JavaLanguageJudgeStrategy implements JudgeStrategy {
         judgeInfoResponse.setMemory(memory);
         judgeInfoResponse.setTime(time);
         // 先判断沙箱执行的结果输出数量是否和预期输出数量相等
+        if (judgeContext.getIsCompileError()) {
+            judgeInfoMessageEnum = JudgeInfoMessageEnum.COMPILE_ERROR;
+        }
         if (outputList.size() != inputList.size()) {
             judgeInfoMessageEnum = JudgeInfoMessageEnum.WRONG_ANSWER;
             judgeInfoResponse.setMessage(judgeInfoMessageEnum.getValue());
@@ -66,6 +70,7 @@ public class JavaLanguageJudgeStrategy implements JudgeStrategy {
             return judgeInfoResponse;
         }
         judgeInfoResponse.setMessage(judgeInfoMessageEnum.getValue());
+        System.out.println(judgeInfoResponse.getMessage());
         return judgeInfoResponse;
     }
 }

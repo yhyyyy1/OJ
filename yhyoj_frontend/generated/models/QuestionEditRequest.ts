@@ -3,15 +3,15 @@
 /* tslint:disable */
 /* eslint-disable */
 
-import type { JudgeCase } from "./JudgeCase";
-import type { JudgeConfig } from "./JudgeConfig";
+import type { JudgeCase } from './JudgeCase';
+import type { JudgeConfig } from './JudgeConfig';
 
 export type QuestionEditRequest = {
-  answer?: string;
-  content?: string;
-  id?: number;
-  judgeCase?: Array<JudgeCase>;
-  judgeConfig?: JudgeConfig;
-  tags?: Array<string>;
-  title?: string;
+    answer?: string;
+    content?: string;
+    id?: number;
+    judgeCase?: Array<JudgeCase>;
+    judgeConfig?: JudgeConfig;
+    tags?: Array<string>;
+    title?: string;
 };

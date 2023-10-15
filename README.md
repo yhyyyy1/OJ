@@ -2368,7 +2368,8 @@ ExecuteCodeResponse executeCode(@RequestBody ExecuteCodeRequest executeCodeReque
 2. API 签名认证  
    给允许调用的人员分配 accessKey、secretKey，然后校验这两组 key 是否配详细请见 API 开放平台项目
 ## 跑通完整的单机项目流程
-
+1. 移动 questionSubmitController 代码到 questionController 中
+2. 由于后端改了接口地址，前端需要重新生成接口调用代码
 补充前端提交列表页面
 
 ## 单机项目改造成微服务

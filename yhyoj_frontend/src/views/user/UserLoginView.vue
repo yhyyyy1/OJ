@@ -21,8 +21,8 @@
           <a-button type="primary" html-type="submit" style="width: 120px"
             >登录
           </a-button>
-          <a-button type="success" style="width: 120px" @click="goRegister"
-            >注册
+          <a-button type="success" @click="toRegister" style="width: 120px"
+            >去注册
           </a-button>
         </a-space>
       </a-form-item>
@@ -66,6 +66,12 @@ const handleSubmit = async () => {
 const goRegister = () => {
   router.push({
     path: "/user/register",
+  });
+};
+const toRegister = () => {
+  router.push({
+    path: "/user/register",
+    replace: true,
   });
 };
 </script>

@@ -10,6 +10,9 @@
 
 tabnine真他娘的好用啊 我日！！！！！！！！！
 
+如果拉去项目 报错 Delete `␍`  prettier/prettier  
+执行cmd `yarn run lint --fix`
+
 **前端模板 去拉day2的代码**
 
 ### 系统功能梳理
@@ -78,7 +81,6 @@ import {createApp} from 'vue'
 import ArcoVue from '@arco-design/web-vue';
 import App from './App.vue';
 import '@arco-design/web-vue/dist/arco.css';
-
 const app = createApp(App);
 app.use(ArcoVue);
 app.mount('#app');
@@ -2367,15 +2369,81 @@ ExecuteCodeResponse executeCode(@RequestBody ExecuteCodeRequest executeCodeReque
    ```
 2. API 签名认证  
    给允许调用的人员分配 accessKey、secretKey，然后校验这两组 key 是否配详细请见 API 开放平台项目
-## 跑通完整的单机项目流程
 
+## 跑通完整的单机项目流程
+1. 移动 questionSubmitController 代码到 questionController 中
+2. 由于后端改了接口地址，前端需要重新生成接口调用代码
 补充前端提交列表页面
 
-## 单机项目改造成微服务
+## 单机项目改造成微服务——先放一放，目前不想搞这个
 
-## 把项目的模块调用改为消息队列
+### 微服务介绍
 
-### Question：
+#### 什么是微服务？  
+微服务: 专注于提供某类特定功能的代码，而不是把所有的代码全部放到同一个项目里。会把整个大的项目按照定的功能、逻辑进行拆分，拆分为多个子模块，每个子模块可以独立运行、独立负责一类功能，子模块之间相互调用、互不影响。  
+**本质**！：服务拆分、服务之间相互调用、服务管理
+
+#### 主流微服务技术
+Spring Cloud  
+Spring Cloud Alibaba (本项目采用)
+Dubbo (Dubbox)  
+RPC (GRPC、TRPC)  
+本质上是通过 HTTP、或者其他的网络协议进行通讯来实现的。
+
+#### Spring Cloud Alibaba（简称SCA）
+<img src="doc/spring-cloud-alibaba-img.png" width=70%>  
+
+选择2021的版本，选择2021.0.5.0版本  
+1.Spring Cloud Gateway: 网关  
+2.Nacos: 服务注册和配置中心  
+3.Sentinel: 熔断限流  
+4.Seata: 分布式事务  
+5.RocketMQ: 消息队列，削峰填谷  
+6.Docker: 使用Docker进行容器化部署  
+7.Kubernetes: 使用k8s进行容器化部署  
+
+Nacos: 集中存管项目中所有服务的信息，便于服务之间找到彼此，同时，还支持集中存储整个项目中的配置.  
+整个微服务请求流程:
+
+<img src="https://sca-storage.oss-cn-hangzhou.aliyuncs.com/sca-example/image.png" width = 70%>
+
+### 改造前思考
+
+从业务需求出发，思考单机和分布式的区别。  
+用户登录功能:需要改造为分布式登录  
+其他内容：
++ 有没有用到单机的锁?改造为分布式锁(伙伴匹配系统讲过)  
++ 有没有用到本地缓存? 改造为分布式缓存 (Redis)  
++ 需不需要用到分布式事务? 比如操作多个库
+
+#### 1.改造分布式登录
+#### 2. 微服务划分
+#### 3. 路由划分
+
+## 把项目的模块调用改为消息队列——消息队列解耦
+此处选用 RabbitMQ 消息队列改造项目，解耦判题服务和题目服务，题目服务只需要向消息队列发消息，判题服务从消息队列中获取消息去执行判题，然后异步更新数据库即可
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+## Question：
 
 1. vue中父子组件之间传值 & 相互管理 的操作 interface Props {xxxx} & const props = withDefaults
 2. 实体类中添加这些东西是干嘛的呢。。
@@ -2408,3 +2476,11 @@ ExecuteCodeResponse executeCode(@RequestBody ExecuteCodeRequest executeCodeReque
 
 运行程序报错，自己创建的程序包不存在  
 解决方法：执行maven管理中Lifecycle的clean？why？
+
+前端运行出现 
+```
+ERROR  Error loading vue.config.js:
+ERROR  TypeError: defineConfig is not a function
+TypeError: defineConfig is not a function
+```
+表明vue的版本不对，升级package中的vue版本就行了`"@vue/cli-service": "~5.0.8",`

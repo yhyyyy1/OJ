@@ -48,6 +48,25 @@ export class WxMpControllerService {
         return __request(OpenAPI, {
             method: "POST",
             url: "/api/",
+            method: 'POST',
+            url: '/api/',
+            errors: {
+                401: `Unauthorized`,
+                403: `Forbidden`,
+                404: `Not Found`,
+            },
+        });
+    }
+
+    /**
+     * setMenu
+     * @returns string OK
+     * @throws ApiError
+     */
+    public static setMenuUsingGet(): CancelablePromise<string> {
+        return __request(OpenAPI, {
+            method: 'GET',
+            url: '/api/setMenu',
             errors: {
                 401: `Unauthorized`,
                 403: `Forbidden`,
@@ -72,4 +91,5 @@ export class WxMpControllerService {
             },
         });
     }
+
 }

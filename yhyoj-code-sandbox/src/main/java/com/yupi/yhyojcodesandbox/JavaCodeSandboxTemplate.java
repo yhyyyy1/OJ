@@ -58,7 +58,7 @@ public abstract class JavaCodeSandboxTemplate implements CodeSandbox {
             Process compileProcess = Runtime.getRuntime().exec(compileCmd);
             ExecuteMessage executeMessage = ProcessUtils.runProcessAndGetMessage(compileProcess, "编译");
             if (executeMessage.getExitValue() != 0) {
-                throw new RuntimeException("编译错误");
+                return null;
             }
             return executeMessage;
         } catch (Exception e) {
@@ -171,19 +171,22 @@ public abstract class JavaCodeSandboxTemplate implements CodeSandbox {
         String code = executeCodeRequest.getCode();
         String language = executeCodeRequest.getLanguage();
         List<String> inputList = executeCodeRequest.getInputList();
-
+        ExecuteCodeResponse outputResponse = new ExecuteCodeResponse();
         //1. 把用户的代码保存为文件
         File userCodeFile = saveCodeToFile(code);
 
         //2. 编译代码文件，得到class文件
         ExecuteMessage compileFileExecuteMessage = compileFile(userCodeFile);
         System.out.println(compileFileExecuteMessage);
-
         //3. 执行代码得到输出结果
-        List<ExecuteMessage> executeMessageList = runFile(userCodeFile, inputList);
-
-        //4. 收集整理输出结果
-        ExecuteCodeResponse outputResponse = getOutputResponse(executeMessageList);
+        if (compileFileExecuteMessage != null) {
+            List<ExecuteMessage> executeMessageList = runFile(userCodeFile, inputList);
+            //4. 收集整理输出结果
+            outputResponse = getOutputResponse(executeMessageList);
+        } else {
+            System.out.println("编译失败");
+            outputResponse.setStatus(3);
+        }
 
         //5. 文件清理，释放空间（对应的tmpCode）
         boolean b = deleteFile(userCodeFile);
@@ -207,7 +210,7 @@ public abstract class JavaCodeSandboxTemplate implements CodeSandbox {
         executeCodeResponse.setOutputsList(new ArrayList<String>());
         executeCodeResponse.setMessage(e.getMessage());
         //2表示代码沙箱错误
-        executeCodeResponse.setStatus(2);
+        executeCodeResponse.setStatus(3);
         executeCodeResponse.setJudgeInfo(new JudgeInfo());
         return executeCodeResponse;
     }

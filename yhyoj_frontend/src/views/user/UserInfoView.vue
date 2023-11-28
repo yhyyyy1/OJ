@@ -15,8 +15,8 @@ import { UserControllerService } from "../../../generated";
 const route = useRoute();
 const userId = ref(route.query.userId);
 
-// onMounted(() => {
-//   const res = UserControllerService.getUserVoByIdUsingGet(userId.value);
-//   if (res.)
-// });
+onMounted(() => {
+  // const res = UserControllerService.getUserVoByIdUsingGet(userId.value);
+  // if (res.)
+});
 </script>

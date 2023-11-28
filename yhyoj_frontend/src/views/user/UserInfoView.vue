@@ -8,15 +8,15 @@
   </div>
 </template>
 <script setup lang="ts">
-import {onMounted, ref} from "vue";
-import {useRoute} from "vue-router";
-import {UserControllerService} from "../../../generated";
+import { onMounted, ref } from "vue";
+import { useRoute } from "vue-router";
+import { UserControllerService } from "../../../generated";
 
 const route = useRoute();
 const userId = ref(route.query.userId);
 
-onMounted(() => {
-  const res = UserControllerService.getUserVoByIdUsingGet(userId.value);
-  if (res.)
-});
+// onMounted(() => {
+//   const res = UserControllerService.getUserVoByIdUsingGet(userId.value);
+//   if (res.)
+// });
 </script>

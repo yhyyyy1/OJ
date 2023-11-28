@@ -129,8 +129,9 @@
 ### components 文件夹 —— 组件管理
 
 #### 1. components/GlobalHeader.vue
-全局的头部样式——平台Logo、菜单、用户状态
-
+全局的头部样式——平台Logo、菜单、用户状态  
+主要的需求：
+1. 隐藏几种不需要的页面（）
 #### 2. components/CodeEditor.vue
 
 #### 3. components/MdEditor.vue

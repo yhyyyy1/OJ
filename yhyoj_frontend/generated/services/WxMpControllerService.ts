@@ -2,12 +2,11 @@
 /* istanbul ignore file */
 /* tslint:disable */
 /* eslint-disable */
-import type { CancelablePromise } from '../core/CancelablePromise';
-import { OpenAPI } from '../core/OpenAPI';
-import { request as __request } from '../core/request';
+import type {CancelablePromise} from "../core/CancelablePromise";
+import {OpenAPI} from "../core/OpenAPI";
+import {request as __request} from "../core/request";
 
 export class WxMpControllerService {
-
     /**
      * check
      * @param echostr echostr
@@ -18,19 +17,19 @@ export class WxMpControllerService {
      * @throws ApiError
      */
     public static checkUsingGet(
-echostr?: string,
-nonce?: string,
-signature?: string,
-timestamp?: string,
-): CancelablePromise<string> {
+        echostr?: string,
+        nonce?: string,
+        signature?: string,
+        timestamp?: string
+    ): CancelablePromise<string> {
         return __request(OpenAPI, {
-            method: 'GET',
-            url: '/api/',
+            method: "GET",
+            url: "/api/",
             query: {
-                'echostr': echostr,
-                'nonce': nonce,
-                'signature': signature,
-                'timestamp': timestamp,
+                echostr: echostr,
+                nonce: nonce,
+                signature: signature,
+                timestamp: timestamp,
             },
             errors: {
                 401: `Unauthorized`,
@@ -47,6 +46,8 @@ timestamp?: string,
      */
     public static receiveMessageUsingPost(): CancelablePromise<any> {
         return __request(OpenAPI, {
+            method: "POST",
+            url: "/api/",
             method: 'POST',
             url: '/api/',
             errors: {
@@ -66,6 +67,23 @@ timestamp?: string,
         return __request(OpenAPI, {
             method: 'GET',
             url: '/api/setMenu',
+            errors: {
+                401: `Unauthorized`,
+                403: `Forbidden`,
+                404: `Not Found`,
+            },
+        });
+    }
+
+    /**
+     * setMenu
+     * @returns string OK
+     * @throws ApiError
+     */
+    public static setMenuUsingGet(): CancelablePromise<string> {
+        return __request(OpenAPI, {
+            method: "GET",
+            url: "/api/setMenu",
             errors: {
                 401: `Unauthorized`,
                 403: `Forbidden`,

@@ -103,6 +103,8 @@ public class JudgeServiceImpl implements JudgeService {
         judgeContext.setQuestionSubmit(questionSubmit);
         if (executeCodeResponse.getStatus() == 3) {
             judgeContext.setIsCompileError(true);
+        } else {
+            judgeContext.setIsCompileError(false);
         }
         //log.info(String.valueOf(judgeContext));
         //使用judgeManager，避免因为对不同语言进行不同操作而导致不停的if... else if... 导致代码冗余的情况
@@ -116,7 +118,6 @@ public class JudgeServiceImpl implements JudgeService {
         } else {
             questionSubmitUpdate.setStatus(QuestionSubmitStatusEnum.SUCCEED.getValue());
         }
-
         questionSubmitUpdate.setJudgeInfo(JSONUtil.toJsonStr(judgeInfo));
         update = questionSubmitService.updateById(questionSubmitUpdate);
         if (!update) {

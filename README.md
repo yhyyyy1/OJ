@@ -2443,7 +2443,50 @@ Nacos: 集中存管项目中所有服务的信息，便于服务之间找到彼�
 
 #### 2. 微服务划分
 
+依赖服务：
+
+- 注册中心：Nacos
+- 微服务网关(yhyoj-backend-gateway)：Gateway 聚合所有的接口，统一接受前端的请求
+
+公共模块：
+
+- common 公共模块(yhyoj-backend-common):全局异常处理器、请求响应封装类、公用的工具类等
+- model 模型模块(yhyoj-backend-model) : 很多服务公用的实体类
+- 公用接口模块 (yhyoj-backend-service-client) : 只存放接口，不存放实现 (多个服务之间要共享)
+
+1. 用户模块(yhyoj-backend-user-service 8102)
+    1. 注册
+    2. 登录
+2. 题目模块(yhyoj-backend-question-service 8103)
+    1. 创建题目-admin
+    2. 删除题目-admin
+    3. 修改题目-admin
+    4. 搜索题目-user
+    5. 在线做题——题目详情页
+    6. 题目提交
+3. 判题模块(yhyoj-backend-judge-service 8104)
+    1. 提交判题——结果正确or错误
+    2. 错误处理——内存溢出、安全性、超时
+    3. **代码沙箱**——安全沙箱
+    4. 开放接口
+
 #### 3. 路由划分
+
+用springboot的context-path 统一修改个项目的接口前缀，如
+用户服务:
+
+- /api/user
+- /api/user/inner (内部调用，网关层面要做限制)
+  题目服务
+- /api/question (也包括题目提交信息)
+- /api/question/inner (内部调用，网关层面要做限制)
+  判题服务
+- /api/judge
+- /api/judge/inner (内部调用，网关层面要做限制)
+
+### Nacos 注册中心启动
+
+2.2.0版本！
 
 ## 把项目的模块调用改为消息队列——消息队列解耦
 

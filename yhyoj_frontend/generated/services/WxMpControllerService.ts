@@ -7,7 +7,6 @@ import {OpenAPI} from '../core/OpenAPI';
 import {request as __request} from '../core/request';
 
 export class WxMpControllerService {
-
     /**
      * check
      * @param echostr echostr
@@ -21,16 +20,16 @@ export class WxMpControllerService {
         echostr?: string,
         nonce?: string,
         signature?: string,
-        timestamp?: string,
+        timestamp?: string
     ): CancelablePromise<string> {
         return __request(OpenAPI, {
-            method: 'GET',
-            url: '/api/',
+            method: "GET",
+            url: "/api/",
             query: {
-                'echostr': echostr,
-                'nonce': nonce,
-                'signature': signature,
-                'timestamp': timestamp,
+                echostr: echostr,
+                nonce: nonce,
+                signature: signature,
+                timestamp: timestamp,
             },
             errors: {
                 401: `Unauthorized`,
@@ -47,6 +46,8 @@ export class WxMpControllerService {
      */
     public static receiveMessageUsingPost(): CancelablePromise<any> {
         return __request(OpenAPI, {
+            method: "POST",
+            url: "/api/",
             method: 'POST',
             url: '/api/',
             errors: {
@@ -66,6 +67,23 @@ export class WxMpControllerService {
         return __request(OpenAPI, {
             method: 'GET',
             url: '/api/setMenu',
+            errors: {
+                401: `Unauthorized`,
+                403: `Forbidden`,
+                404: `Not Found`,
+            },
+        });
+    }
+
+    /**
+     * setMenu
+     * @returns string OK
+     * @throws ApiError
+     */
+    public static setMenuUsingGet(): CancelablePromise<string> {
+        return __request(OpenAPI, {
+            method: "GET",
+            url: "/api/setMenu",
             errors: {
                 401: `Unauthorized`,
                 403: `Forbidden`,

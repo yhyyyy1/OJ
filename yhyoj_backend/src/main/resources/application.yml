@@ -24,8 +24,8 @@ spring:
     url: jdbc:mysql://localhost:3306/yhyoj
     username: root
     password: 123456
-  # Redis 配置
-  # todo 需替换配置，然后取消注释
+    # Redis 配置
+    # todo 需替换配置，然后取消注释
     redis:
       database: 0
       host: localhost
